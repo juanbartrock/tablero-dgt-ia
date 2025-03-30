@@ -8,6 +8,7 @@ import ProtectedRoute from '../lib/auth/protected-route';
 import { useAuth } from '../lib/auth/auth-context';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Link from 'next/link';
 
 declare global {
   interface Window {
@@ -30,20 +31,37 @@ interface User {
   name: string;
 }
 
-interface ViewedNotification {
+interface NotificationView {
   userId: number;
   username: string;
   userName: string;
-  notificationId: string;
+  notificationId: number;
   notificationMessage: string;
   viewedAt: string;
+}
+
+interface NotificationItem {
+  message: string;
+  timestamp: number;
+  createdBy: string;
+  createdAt: string;
+  createdById?: number;
+  createdByName?: string;
+  viewCount?: number;
+}
+
+interface DeletedNotification {
+  notificationId: number;
+  deletedBy: string;
+  deletedByName?: string;
+  deletedAt: string;
 }
 
 export default function AdminPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [notification, setNotification] = useState<string>('');
-  const [currentNotification, setCurrentNotification] = useState<string | null>(null);
+  const [currentNotification, setCurrentNotification] = useState<NotificationItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -56,7 +74,10 @@ export default function AdminPage() {
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
-  const [viewedNotifications, setViewedNotifications] = useState<ViewedNotification[]>([]);
+  const [notificationText, setNotificationText] = useState('');
+  const [notificationViews, setNotificationViews] = useState<NotificationView[]>([]);
+  const [notificationsHistory, setNotificationsHistory] = useState<NotificationItem[]>([]);
+  const [deletedNotifications, setDeletedNotifications] = useState<any[]>([]);
   
   // Cargar datos iniciales y configurar actualización periódica
   useEffect(() => {
@@ -64,7 +85,7 @@ export default function AdminPage() {
       await loadNotification();
       await loadVisits();
       await loadUsers();
-      loadViewedNotifications();
+      loadNotificationData();
     };
     
     loadData();
@@ -98,7 +119,7 @@ export default function AdminPage() {
       if (storedNotification) {
         const data = JSON.parse(storedNotification);
         if (data.message) {
-          setCurrentNotification(data.message);
+          setCurrentNotification(data);
           setNotification(data.message);
           return;
         }
@@ -140,22 +161,6 @@ export default function AdminPage() {
     }
   };
 
-  // Cargar las notificaciones vistas
-  const loadViewedNotifications = () => {
-    try {
-      const viewedData = localStorage.getItem('viewed_notifications');
-      if (viewedData) {
-        const data = JSON.parse(viewedData);
-        setViewedNotifications(data);
-      } else {
-        setViewedNotifications([]);
-      }
-    } catch (error) {
-      console.error('Error al cargar el historial de notificaciones:', error);
-      setViewedNotifications([]);
-    }
-  };
-
   // Actualizar la notificación en la página principal si es posible
   const updateNotificationDisplay = () => {
     // Intentar llamar a la función global si está disponible
@@ -172,12 +177,27 @@ export default function AdminPage() {
 
     try {
       if (notification.trim()) {
+        // Verificar que el usuario exista antes de acceder a sus propiedades
+        if (!user) {
+          throw new Error('Usuario no autenticado');
+        }
+
         // Guardar en localStorage directamente
         localStorage.setItem(
           'important_notification',
           JSON.stringify({ message: notification, timestamp: new Date().toISOString() })
         );
-        setCurrentNotification(notification);
+        
+        setCurrentNotification({ 
+          message: notification, 
+          timestamp: Date.now(), 
+          createdBy: user.username, 
+          createdAt: new Date().toISOString(), 
+          createdById: user.id, 
+          createdByName: user.name, 
+          viewCount: 0 
+        });
+        
         setSuccessMessage('Notificación importante actualizada correctamente');
         
         // Actualizar la notificación en la página principal si está abierta
@@ -299,6 +319,193 @@ export default function AdminPage() {
     setUserForm({ username: '', name: '', password: '' });
   };
 
+  const loadNotificationData = () => {
+    try {
+      // Cargar historial de notificaciones creadas
+      const history = localStorage.getItem('created_notifications');
+      if (history) {
+        const parsed = JSON.parse(history);
+        // Ordenar por fecha (más recientes primero)
+        const sorted = parsed.sort((a: any, b: any) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setNotificationsHistory(sorted);
+      }
+      
+      // Cargar vistas de notificaciones
+      const views = localStorage.getItem('viewed_notifications');
+      if (views) {
+        const parsed = JSON.parse(views);
+        // Ordenar por fecha (más recientes primero)
+        const sorted = parsed.sort((a: any, b: any) => 
+          new Date(b.viewedAt).getTime() - new Date(a.viewedAt).getTime()
+        );
+        setNotificationViews(sorted);
+      }
+      
+      // Cargar notificaciones eliminadas
+      const deleted = localStorage.getItem('deleted_notifications');
+      if (deleted) {
+        setDeletedNotifications(JSON.parse(deleted));
+      }
+    } catch (error) {
+      console.error('Error al cargar datos de notificaciones:', error);
+    }
+  };
+  
+  const handleNotificationSave = () => {
+    if (!notificationText.trim() || !user) return;
+    
+    try {
+      // Crear objeto de notificación
+      const notification = {
+        message: notificationText,
+        timestamp: Date.now(),
+        createdBy: user.username,
+        createdAt: new Date().toISOString(),
+        createdById: user.id,
+        createdByName: user.name,
+        viewCount: 0
+      };
+      
+      // Guardar como notificación actual
+      localStorage.setItem('important_notification', JSON.stringify(notification));
+      
+      // Agregar al historial
+      let history = [];
+      const existingHistory = localStorage.getItem('created_notifications');
+      if (existingHistory) {
+        history = JSON.parse(existingHistory);
+      }
+      history.push(notification);
+      localStorage.setItem('created_notifications', JSON.stringify(history));
+      
+      // Actualizar estado
+      setCurrentNotification(notification);
+      setNotificationsHistory([notification, ...notificationsHistory]);
+      setNotificationText('');
+      
+      alert('Notificación creada correctamente');
+    } catch (error) {
+      console.error('Error al guardar notificación:', error);
+      alert('Error al guardar la notificación');
+    }
+  };
+  
+  const handleNotificationDelete = () => {
+    if (!currentNotification || !user) {
+      alert('No hay notificación activa para eliminar');
+      return;
+    }
+    
+    try {
+      // Crear registro de eliminación
+      const deletionRecord = {
+        notificationId: currentNotification.timestamp,
+        notificationMessage: currentNotification.message,
+        deletedBy: user.username,
+        deletedByName: user.name,
+        deletedById: user.id,
+        deletedAt: new Date().toISOString(),
+        originalCreatedBy: currentNotification.createdBy,
+        originalCreatedAt: currentNotification.createdAt
+      };
+      
+      // Agregar al historial de eliminaciones
+      let deletions = [];
+      const existingDeletions = localStorage.getItem('deleted_notifications');
+      if (existingDeletions) {
+        deletions = JSON.parse(existingDeletions);
+      }
+      deletions.push(deletionRecord);
+      localStorage.setItem('deleted_notifications', JSON.stringify(deletions));
+      
+      // Eliminar notificación actual
+      localStorage.removeItem('important_notification');
+      
+      // Actualizar estado
+      setCurrentNotification(null);
+      setDeletedNotifications([...deletedNotifications, deletionRecord]);
+      
+      alert('Notificación eliminada correctamente');
+    } catch (error) {
+      console.error('Error al eliminar notificación:', error);
+      alert('Error al eliminar la notificación');
+    }
+  };
+  
+  // Función para formatear fecha
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+  
+  // Verificar si el usuario es administrador
+  if (!user || user.username !== 'admin') {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-2xl text-red-600 mb-4">Acceso denegado</h1>
+        <p className="mb-4">No tienes permisos para acceder al panel de administración.</p>
+        <Link href="/" className="text-blue-600 hover:underline">Volver al inicio</Link>
+      </div>
+    );
+  }
+  
+  // Encontrar las vistas para una notificación específica
+  const getViewsForNotification = (notificationId: number) => {
+    return notificationViews.filter(view => view.notificationId === notificationId);
+  };
+  
+  // Verificar si una notificación está eliminada
+  const isNotificationDeleted = (notificationId: number) => {
+    return deletedNotifications.some(deleted => deleted.notificationId === notificationId);
+  };
+  
+  // Obtener información de eliminación
+  const getDeletionInfo = (notificationId: number) => {
+    return deletedNotifications.find(deleted => deleted.notificationId === notificationId);
+  };
+
+  // Función para eliminar todas las notificaciones y su historial
+  const handleDeleteAllNotifications = () => {
+    if (confirm('¿Estás seguro de que deseas eliminar TODAS las notificaciones y su historial? Esta acción no se puede deshacer.')) {
+      try {
+        // Eliminar notificación actual
+        localStorage.removeItem('important_notification');
+        
+        // Eliminar el historial de notificaciones creadas
+        localStorage.removeItem('created_notifications');
+        
+        // Eliminar el historial de notificaciones vistas
+        localStorage.removeItem('viewed_notifications');
+        
+        // Eliminar el historial de notificaciones eliminadas
+        localStorage.removeItem('deleted_notifications');
+        
+        // Actualizar estados
+        setCurrentNotification(null);
+        setNotificationsHistory([]);
+        setNotificationViews([]);
+        setDeletedNotifications([]);
+        
+        alert('Todos los datos de notificaciones han sido eliminados correctamente.');
+      } catch (error) {
+        console.error('Error al eliminar datos de notificaciones:', error);
+        alert('Ocurrió un error al eliminar las notificaciones.');
+      }
+    }
+  };
+
   return (
     <ProtectedRoute>
       <div className="container mx-auto py-6">
@@ -394,54 +601,69 @@ export default function AdminPage() {
           {/* Sección de Notificaciones */}
           {activeTab === 'notifications' && (
             <div>
-              <h2 className="text-xl font-semibold mb-4">Notificación Importante</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Notificación Importante</h2>
+                <button 
+                  onClick={handleDeleteAllNotifications}
+                  className="bg-red-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-700"
+                >
+                  Eliminar TODAS las notificaciones
+                </button>
+              </div>
               <p className="text-gray-600 mb-4">
                 Esta notificación se mostrará en la parte superior de la aplicación para todos los usuarios.
               </p>
               
-              {currentNotification && (
-                <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-md">
-                  <p className="font-medium">Notificación actual:</p>
-                  <p className="text-red-700">{currentNotification}</p>
+              {currentNotification ? (
+                <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-lg font-medium text-red-800">{currentNotification.message}</p>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Creada por: {currentNotification.createdByName || currentNotification.createdBy} | 
+                        Fecha: {formatDate(currentNotification.createdAt)}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Vista por {getViewsForNotification(currentNotification.timestamp).length} usuarios
+                      </p>
+                    </div>
+                    <button 
+                      onClick={handleNotificationDelete}
+                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                    >
+                      Eliminar Notificación
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-6">
+                  <p className="text-gray-500 italic mb-4">No hay notificación activa.</p>
                 </div>
               )}
               
-              <form onSubmit={handleSubmit}>
+              <div>
+                <h3 className="text-lg font-medium mb-3">Crear Nueva Notificación</h3>
                 <div className="mb-4">
-                  <label htmlFor="notification" className="block text-sm font-medium text-gray-700 mb-1">
-                    Mensaje de Notificación
+                  <label htmlFor="notificationText" className="block text-sm font-medium text-gray-700 mb-1">
+                    Mensaje de notificación
                   </label>
                   <textarea
-                    id="notification"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    id="notificationText"
+                    value={notificationText}
+                    onChange={(e) => setNotificationText(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     rows={3}
-                    value={notification}
-                    onChange={(e) => setNotification(e.target.value)}
-                    placeholder="Ingrese el mensaje de notificación importante..."
-                  />
+                    placeholder="Escribe el mensaje de notificación aquí..."
+                  ></textarea>
                 </div>
-                
-                <div className="flex space-x-3">
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Guardando...' : 'Guardar Notificación'}
-                  </button>
-                  
-                  {currentNotification && (
-                    <button
-                      type="button"
-                      className="px-4 py-2 bg-red-500 text-white rounded-md text-sm font-medium hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-                      onClick={handleClear}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Eliminando...' : 'Eliminar Notificación'}
-                    </button>
-                  )}
-                </div>
-              </form>
+                <button
+                  onClick={handleNotificationSave}
+                  disabled={!notificationText.trim()}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-blue-300"
+                >
+                  Guardar Notificación
+                </button>
+              </div>
             </div>
           )}
           
@@ -657,51 +879,6 @@ export default function AdminPage() {
             </div>
           )}
           
-          {/* Nueva sección de historial de notificaciones vistas */}
-          {activeTab === 'notifications' && viewedNotifications.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-3">Historial de Notificaciones Vistas</h3>
-              <div className="overflow-x-auto rounded-lg border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Usuario
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nombre
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Notificación
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fecha y Hora de Vista
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {viewedNotifications.map((notification, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {notification.username}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {notification.userName}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                          {notification.notificationMessage}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {format(parseISO(notification.viewedAt), 'dd/MM/yyyy HH:mm:ss', { locale: es })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-          
           {/* Sección de Gestión de Tareas */}
           {activeTab === 'tasks' && (
             <div>
@@ -709,6 +886,90 @@ export default function AdminPage() {
               <TaskManager />
             </div>
           )}
+
+          <div className="mb-8 bg-white p-6 rounded-lg shadow">
+            <h2 className="text-2xl font-semibold mb-6">Historial de Notificaciones</h2>
+            
+            {notificationsHistory.length === 0 ? (
+              <p className="text-gray-500 italic">No hay historial de notificaciones.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notificación</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Creada por</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de creación</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vistas</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {notificationsHistory.map((notification, index) => {
+                      const isActive = currentNotification?.timestamp === notification.timestamp;
+                      const isDeleted = isNotificationDeleted(notification.timestamp);
+                      const deletionInfo = getDeletionInfo(notification.timestamp);
+                      const views = getViewsForNotification(notification.timestamp);
+                      
+                      return (
+                        <tr key={index} className={isActive ? 'bg-green-50' : isDeleted ? 'bg-gray-100' : ''}>
+                          <td className="px-6 py-4 whitespace-normal">
+                            <div className="text-sm font-medium text-gray-900">{notification.message}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{notification.createdByName || notification.createdBy}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{formatDate(notification.createdAt)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {isActive ? (
+                              <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Activa
+                              </span>
+                            ) : isDeleted ? (
+                              <div>
+                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                  Eliminada
+                                </span>
+                                {deletionInfo && (
+                                  <div className="mt-1 text-xs text-gray-500">
+                                    Por: {deletionInfo.deletedByName || deletionInfo.deletedBy}<br/>
+                                    {formatDate(deletionInfo.deletedAt)}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                Inactiva
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{views.length} usuarios</div>
+                            {views.length > 0 && (
+                              <div className="mt-1">
+                                <details className="text-xs text-gray-500">
+                                  <summary className="cursor-pointer hover:text-blue-500">Ver detalles</summary>
+                                  <ul className="mt-1 pl-2 border-l-2 border-gray-200">
+                                    {views.map((view, vidx) => (
+                                      <li key={vidx} className="mb-1">
+                                        <span className="font-medium">{view.userName || view.username}</span> - {formatDate(view.viewedAt)}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </details>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </ProtectedRoute>

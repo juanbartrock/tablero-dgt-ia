@@ -15,6 +15,7 @@ import { TaskCountsType } from './lib/db';
 import ProtectedRoute from './lib/auth/protected-route';
 import { useAuth } from './lib/auth/auth-context';
 import AlertNotification from './components/AlertNotification';
+import NotificationHistory from './components/NotificationHistory';
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -220,27 +221,107 @@ export default function Home() {
   const handleSaveNotification = () => {
     if (!newNotification.trim() || !user) return;
     
-    const notification = {
-      message: newNotification,
-      timestamp: Date.now(),
-      createdBy: user.username,
-      createdAt: new Date().toISOString()
-    };
+    try {
+      // Crear notificación con toda la información necesaria
+      const notification = {
+        message: newNotification,
+        timestamp: Date.now(),
+        createdBy: user.username,
+        createdAt: new Date().toISOString(),
+        createdById: user.id,
+        createdByName: user.name,
+        status: 'active',
+        viewCount: 0
+      };
+      
+      console.log('Guardando notificación:', notification);
+      
+      // Guardar en localStorage principal (notificación activa)
+      localStorage.setItem('important_notification', JSON.stringify(notification));
+      
+      // Registrar en el historial de notificaciones creadas
+      let createdNotifications = [];
+      try {
+        const storedNotifications = localStorage.getItem('created_notifications');
+        if (storedNotifications) {
+          createdNotifications = JSON.parse(storedNotifications);
+        }
+      } catch (error) {
+        console.error('Error al cargar historial de notificaciones creadas:', error);
+      }
+        
+      // Agregar a la lista y guardar
+      createdNotifications.push(notification);
+      localStorage.setItem('created_notifications', JSON.stringify(createdNotifications));
+      
+      console.log('Notificación registrada en historial. Total:', createdNotifications.length);
+      
+      // Notificar al usuario y cerrar el formulario
+      setNewNotification('');
+      setShowNotificationForm(false);
+      setNotificationSuccess('Notificación creada correctamente');
+      
+      // Limpiar el mensaje de éxito después de 2 segundos
+      setTimeout(() => setNotificationSuccess(null), 2000);
+      
+      // Forzar recarga para que se muestre la notificación
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (error) {
+      console.error('Error al crear notificación:', error);
+      alert('Ocurrió un error al crear la notificación. Por favor, intente nuevamente.');
+    }
+  };
+  
+  // Crear una función para marcar notificaciones como eliminadas
+  const handleDeleteNotification = () => {
+    if (!user) return;
     
-    // Guardar en localStorage
-    localStorage.setItem('important_notification', JSON.stringify(notification));
-    
-    // Notificar al usuario
-    setNewNotification('');
-    setShowNotificationForm(false);
-    setNotificationSuccess('Notificación creada correctamente');
-    
-    // Limpiar el mensaje de éxito después de 2 segundos
-    setTimeout(() => setNotificationSuccess(null), 2000);
-    
-    // Actualizar la visualización de notificaciones
-    // Esto causa que se actualice el componente AlertNotification en React
-    loadData();
+    try {
+      // Obtener la notificación activa
+      const storedNotification = localStorage.getItem('important_notification');
+      if (!storedNotification) {
+        console.log('No hay notificación activa para eliminar');
+        return;
+      }
+      
+      const notification = JSON.parse(storedNotification);
+      console.log('Notificación a eliminar:', notification);
+      
+      // Registrar la eliminación
+      let deletedNotifications = [];
+      const deletedData = localStorage.getItem('deleted_notifications');
+      if (deletedData) {
+        deletedNotifications = JSON.parse(deletedData);
+      }
+      
+      // Crear registro de eliminación
+      const deleteRecord = {
+        notificationId: notification.timestamp,
+        notificationMessage: notification.message,
+        deletedBy: user.username,
+        deletedByName: user.name,
+        deletedById: user.id,
+        deletedAt: new Date().toISOString(),
+        originalCreatedBy: notification.createdBy,
+        originalCreatedAt: notification.createdAt
+      };
+      
+      // Agregar al historial
+      deletedNotifications.push(deleteRecord);
+      localStorage.setItem('deleted_notifications', JSON.stringify(deletedNotifications));
+      
+      // Eliminar notificación activa
+      localStorage.removeItem('important_notification');
+      
+      console.log('Notificación marcada como eliminada/cumplida');
+      
+      // Recargar la página
+      setTimeout(() => window.location.reload(), 300);
+    } catch (error) {
+      console.error('Error al eliminar notificación:', error);
+    }
   };
   
   // Contenido de las pestañas
@@ -462,6 +543,16 @@ export default function Home() {
           <div className="border-t border-blue-100 pt-6" id="tabs-section" ref={tabsSectionRef}>
             <Tabs tabs={tabsContent} defaultTabId={activeTab} />
           </div>
+          
+          {/* Historial de notificaciones (solo para admins) */}
+          {user && user.username === 'admin' && (
+            <div className="border-t border-blue-100 mt-8 pt-8">
+              <h2 className="text-2xl font-bold mb-4 text-gray-800">Administración de Notificaciones</h2>
+              <div className="bg-white rounded-lg shadow-sm p-0">
+                <NotificationHistory />
+              </div>
+            </div>
+          )}
           
           {/* Modal para cambiar contraseña */}
           {showPasswordModal && (
