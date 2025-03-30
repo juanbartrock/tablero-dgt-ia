@@ -245,26 +245,37 @@ export default function Home() {
   return (
     <div className="bg-gradient-to-br from-blue-50 to-slate-100 rounded-lg p-6 shadow-sm">
       {/* Dashboard */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2 bg-gradient-to-r from-primary to-info bg-clip-text text-transparent drop-shadow-sm">Estado de Tareas</h1>
-        <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-500">Última actualización: {lastUpdate}</p>
-          <a href="/admin" className="text-sm text-blue-600 hover:underline">Administración</a>
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1">
+            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent drop-shadow-sm">Estado de Tareas</h1>
+            <div className="h-1 w-24 bg-gradient-to-r from-primary to-info rounded-full mt-2"></div>
+          </div>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-gray-500 bg-white px-3 py-2 rounded-md shadow-sm border border-gray-100">Última actualización: {lastUpdate}</p>
+            <a href="/admin" className="px-4 py-2 bg-gradient-to-r from-primary to-info text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Administración
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-1">
+          <div className="grid grid-cols-2 gap-3 h-full">
+            <KPICard title="Total" value={activeTasks.length} color="success" onClick={() => navigateToSection('task-manager')} />
+            <KPICard title="Pendientes" value={taskCounts['Pendiente']} color="warning" onClick={() => navigateToSection('pending')} />
+            <KPICard title="En Progreso" value={taskCounts['En Progreso']} color="info" onClick={() => navigateToSection('in-progress')} />
+            <KPICard title="Detenida" value={taskCounts['Bloqueada']} color="error" onClick={() => navigateToSection('blocked')} />
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-1">
-            <div className="grid grid-cols-2 gap-3 h-full">
-              <KPICard title="Total" value={activeTasks.length} color="success" onClick={() => navigateToSection('task-manager')} />
-              <KPICard title="Pendientes" value={taskCounts['Pendiente']} color="warning" onClick={() => navigateToSection('pending')} />
-              <KPICard title="En Progreso" value={taskCounts['En Progreso']} color="info" onClick={() => navigateToSection('in-progress')} />
-              <KPICard title="Detenida" value={taskCounts['Bloqueada']} color="error" onClick={() => navigateToSection('blocked')} />
-            </div>
-          </div>
-          
-          <div className="lg:col-span-2">
-            <HighlightedTasksList tasks={highlightedTasks} />
-          </div>
+        <div className="lg:col-span-2">
+          <HighlightedTasksList tasks={highlightedTasks} />
         </div>
       </div>
       

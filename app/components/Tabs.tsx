@@ -34,9 +34,9 @@ export default function Tabs({ tabs, defaultTabId }: TabsProps) {
   };
 
   return (
-    <div>
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+    <div className="rounded-lg overflow-hidden shadow-sm bg-white">
+      <div className="border-b border-gray-200 bg-gradient-to-r from-slate-50 to-white">
+        <nav className="-mb-px flex space-x-1 px-4" aria-label="Tabs">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -44,9 +44,9 @@ export default function Tabs({ tabs, defaultTabId }: TabsProps) {
               onClick={() => handleTabChange(tab.id)}
               className={`
                 ${activeTab === tab.id
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                  ? 'bg-gradient-to-r from-primary to-info text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}
+                whitespace-nowrap py-3 px-4 rounded-t-lg font-medium text-sm transition-all duration-200 ease-in-out flex items-center
               `}
               aria-current={activeTab === tab.id ? 'page' : undefined}
             >
@@ -55,12 +55,12 @@ export default function Tabs({ tabs, defaultTabId }: TabsProps) {
           ))}
         </nav>
       </div>
-      <div className="py-4">
+      <div className="py-6 px-4 transition-all duration-300 ease-in-out">
         {tabs.map(tab => (
           <div 
             key={tab.id} 
             id={`tab-content-${tab.id}`} 
-            className={activeTab === tab.id ? 'block' : 'hidden'}
+            className={`transform transition-opacity duration-300 ${activeTab === tab.id ? 'opacity-100' : 'opacity-0 hidden'}`}
           >
             {tab.content}
           </div>
