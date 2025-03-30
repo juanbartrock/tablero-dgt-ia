@@ -13,6 +13,7 @@ import {
   getTaskCountByStatus,
   getHighlightedTasks,
   deleteAllTasks,
+  getLastUpdateDate,
   TaskCountsType
 } from './db';
 import { importTasksFromGoogleSheets } from './google-sheets-client';
@@ -82,6 +83,11 @@ export class TaskApiClient {
   // Eliminar todas las tareas
   async deleteAllTasks(): Promise<void> {
     return deleteAllTasks();
+  }
+
+  // Obtener la fecha de última actualización
+  async getLastUpdateDate(): Promise<string> {
+    return getLastUpdateDate();
   }
 
   // Importar tareas desde Google Sheets

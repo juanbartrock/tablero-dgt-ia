@@ -10,6 +10,8 @@ export type TaskCountsType = {
 
 // Clave para almacenar tareas en localStorage
 const TASKS_STORAGE_KEY = 'dashboard_tasks';
+// Clave para almacenar la fecha de última actualización
+const LAST_UPDATE_KEY = 'dashboard_last_update';
 
 // Tareas de ejemplo para inicializar
 const initialTasks: Task[] = [
@@ -71,6 +73,13 @@ export async function initializeDb(): Promise<void> {
   if (typeof window !== 'undefined') {
     if (!localStorage.getItem(TASKS_STORAGE_KEY)) {
       localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(initialTasks));
+      // También inicializamos la fecha de última actualización
+      updateLastModifiedDate();
+    } else {
+      // Si existen tareas pero no fecha de actualización, inicializarla
+      if (!localStorage.getItem(LAST_UPDATE_KEY)) {
+        updateLastModifiedDate();
+      }
     }
   }
 }
@@ -100,6 +109,22 @@ export async function getAllTasks(): Promise<Task[]> {
 export async function getTasksByStatus(status: string): Promise<Task[]> {
   const tasks = getTasksFromStorage();
   return tasks.filter(task => task.status === status);
+}
+
+// Actualizar la fecha de última actualización
+function updateLastModifiedDate(): void {
+  if (typeof window === 'undefined') return;
+  
+  const now = new Date().toISOString();
+  localStorage.setItem(LAST_UPDATE_KEY, now);
+}
+
+// Obtener la fecha de última actualización
+export async function getLastUpdateDate(): Promise<string> {
+  if (typeof window === 'undefined') return '';
+  
+  const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY);
+  return lastUpdate || new Date().toISOString(); // Si no existe, devolver la fecha actual
 }
 
 // Crear una nueva tarea
@@ -162,6 +187,9 @@ export async function createTask(task: Omit<Task, 'id'>): Promise<Task> {
   tasks.push(newTask);
   saveTasksToStorage(tasks);
   
+  // Actualizar la fecha de última modificación
+  updateLastModifiedDate();
+  
   return newTask;
 }
 
@@ -188,6 +216,8 @@ export async function updateTask(task: Task): Promise<void> {
     
     // Guardar la lista actualizada
     saveTasksToStorage(updatedTasks);
+    // Actualizar la fecha de última modificación
+    updateLastModifiedDate();
     console.log('Tarea actualizada. Total tareas:', updatedTasks.length);
   } else {
     console.error(`No se encontró la tarea con ID ${task.id} para actualizar`);
@@ -211,6 +241,8 @@ export async function deleteTask(id: number | string): Promise<void> {
   
   if (filteredTasks.length !== tasks.length) {
     saveTasksToStorage(filteredTasks);
+    // Actualizar la fecha de última modificación
+    updateLastModifiedDate();
   }
 }
 
@@ -267,4 +299,6 @@ export async function getHighlightedTasks(): Promise<Task[]> {
 // Eliminar todas las tareas
 export async function deleteAllTasks(): Promise<void> {
   saveTasksToStorage([]);
+  // Actualizar la fecha de última modificación
+  updateLastModifiedDate();
 } 

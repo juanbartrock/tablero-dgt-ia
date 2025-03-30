@@ -7,13 +7,16 @@ import StatusChart from './components/dashboard/StatusChart';
 import UpcomingTasksList from './components/dashboard/UpcomingTasksList';
 import HighlightedTasksList from './components/dashboard/HighlightedTasksList';
 import TaskManager from './components/tasks/TaskManager';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Task } from './lib/types';
 import { taskApiClient } from './lib/api-client';
 import { TaskCountsType } from './lib/db';
+import ProtectedRoute from './lib/auth/protected-route';
+import { useAuth } from './lib/auth/auth-context';
 
 export default function Home() {
+  const { user, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [activeTasks, setActiveTasks] = useState<Task[]>([]);
   const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
@@ -25,6 +28,7 @@ export default function Home() {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [activeTab, setActiveTab] = useState('task-manager');
   const [isScrolling, setIsScrolling] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
   
   // Referencia al contenedor de pestañas
   const tabsSectionRef = useRef<HTMLDivElement>(null);
@@ -59,6 +63,10 @@ export default function Home() {
       // Cargar tareas destacadas
       const highlighted = await taskApiClient.getHighlightedTasks();
       setHighlightedTasks(highlighted);
+      
+      // Cargar la fecha de última actualización
+      const lastUpdateDate = await taskApiClient.getLastUpdateDate();
+      setLastUpdate(lastUpdateDate);
     } catch (error) {
       console.error('Error al cargar los datos:', error);
     } finally {
@@ -91,9 +99,6 @@ export default function Home() {
     })
     .slice(0, 5);  // Mostrar solo las 5 primeras
   
-  // Fecha de última actualización
-  const lastUpdate = format(new Date(), "d 'de' MMMM 'de' yyyy, HH:mm", { locale: es });
-
   // Navegar a una sección específica mediante hash
   const navigateToSection = (tabId: string) => {
     if (isScrolling) return;
@@ -119,6 +124,12 @@ export default function Home() {
         setIsScrolling(false);
       }
     }, 100);
+  };
+
+  // Manejar cierre de sesión
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/login';
   };
   
   // Contenido de las pestañas
@@ -243,58 +254,75 @@ export default function Home() {
   ];
   
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-slate-100 rounded-lg p-6 shadow-sm">
-      {/* Dashboard */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent drop-shadow-sm">Estado de Tareas</h1>
-            <div className="h-1 w-24 bg-gradient-to-r from-primary to-info rounded-full mt-2"></div>
-          </div>
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-gray-500 bg-white px-3 py-2 rounded-md shadow-sm border border-gray-100">Última actualización: {lastUpdate}</p>
-            <a href="/admin" className="px-4 py-2 bg-gradient-to-r from-primary to-info text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Administración
-            </a>
-          </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-1">
-          <div className="grid grid-cols-2 gap-3 h-full">
-            <KPICard title="Total" value={activeTasks.length} color="success" onClick={() => navigateToSection('task-manager')} />
-            <KPICard title="Pendientes" value={taskCounts['Pendiente']} color="warning" onClick={() => navigateToSection('pending')} />
-            <KPICard title="En Progreso" value={taskCounts['En Progreso']} color="info" onClick={() => navigateToSection('in-progress')} />
-            <KPICard title="Detenida" value={taskCounts['Bloqueada']} color="error" onClick={() => navigateToSection('blocked')} />
+    <ProtectedRoute>
+      <div className="bg-gradient-to-br from-blue-50 to-slate-100 rounded-lg p-6 shadow-sm">
+        {/* Dashboard */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent drop-shadow-sm">Estado de Tareas</h1>
+              <div className="h-1 w-24 bg-gradient-to-r from-primary to-info rounded-full mt-2"></div>
+            </div>
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-gray-500 bg-white px-3 py-2 rounded-md shadow-sm border border-gray-100">
+                Última actualización: {lastUpdate ? format(parseISO(lastUpdate), "d 'de' MMMM 'de' yyyy, HH:mm", { locale: es }) : ''}
+              </p>
+              <div className="flex items-center gap-2">
+                {user && (
+                  <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-gray-100 text-sm">
+                    Usuario: <span className="font-medium">{user.name}</span>
+                  </div>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md shadow-sm text-sm font-medium transition-colors"
+                >
+                  Cerrar Sesión
+                </button>
+                <a href="/admin" className="px-4 py-2 bg-gradient-to-r from-primary to-info text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Administración
+                </a>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="lg:col-span-2">
-          <HighlightedTasksList tasks={highlightedTasks} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-1">
+            <div className="grid grid-cols-2 gap-3 h-full">
+              <KPICard title="Total" value={activeTasks.length} color="success" onClick={() => navigateToSection('task-manager')} />
+              <KPICard title="Pendientes" value={taskCounts['Pendiente']} color="warning" onClick={() => navigateToSection('pending')} />
+              <KPICard title="En Progreso" value={taskCounts['En Progreso']} color="info" onClick={() => navigateToSection('in-progress')} />
+              <KPICard title="Detenida" value={taskCounts['Bloqueada']} color="error" onClick={() => navigateToSection('blocked')} />
+            </div>
+          </div>
+          
+          <div className="lg:col-span-2">
+            <HighlightedTasksList tasks={highlightedTasks} />
+          </div>
         </div>
-      </div>
-      
-      {/* Sección de Gestión de Tareas */}
-      <div className="border-t border-blue-100 pt-6" id="tabs-section" ref={tabsSectionRef}>
-        <Tabs tabs={tabsContent} defaultTabId={activeTab} />
-      </div>
-      
-      {/* Estilos para el destacado de secciones */}
-      <style jsx global>{`
-        @keyframes highlightFade {
-          0% { background-color: rgba(59, 130, 246, 0.1); }
-          100% { background-color: transparent; }
-        }
         
-        .highlight-section {
-          animation: highlightFade 1s ease-out;
-        }
-      `}</style>
-    </div>
+        {/* Sección de Gestión de Tareas */}
+        <div className="border-t border-blue-100 pt-6" id="tabs-section" ref={tabsSectionRef}>
+          <Tabs tabs={tabsContent} defaultTabId={activeTab} />
+        </div>
+        
+        {/* Estilos para el destacado de secciones */}
+        <style jsx global>{`
+          @keyframes highlightFade {
+            0% { background-color: rgba(59, 130, 246, 0.1); }
+            100% { background-color: transparent; }
+          }
+          
+          .highlight-section {
+            animation: highlightFade 1s ease-out;
+          }
+        `}</style>
+      </div>
+    </ProtectedRoute>
   );
 } 

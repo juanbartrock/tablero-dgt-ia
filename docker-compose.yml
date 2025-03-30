@@ -12,4 +12,5 @@ services:
     restart: unless-stopped
     volumes:
       - ./app:/app/app
-      - ./public:/app/public 
+      - ./public:/app/public
+      - ./data:/app/public/data 

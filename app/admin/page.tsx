@@ -2,6 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { getImportantNotification, setImportantNotification, clearImportantNotification } from '../lib/notification';
+import { useRouter } from 'next/navigation';
+import TaskManager from '../components/tasks/TaskManager';
+import ProtectedRoute from '../lib/auth/protected-route';
+import { useAuth } from '../lib/auth/auth-context';
 
 declare global {
   interface Window {
@@ -10,6 +14,8 @@ declare global {
 }
 
 export default function AdminPage() {
+  const { logout } = useAuth();
+  const router = useRouter();
   const [notification, setNotification] = useState<string>('');
   const [currentNotification, setCurrentNotification] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,84 +119,39 @@ export default function AdminPage() {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <h1 className="text-2xl font-bold mb-6">Administración de Notificaciones</h1>
-
-      {message && (
-        <div className="p-4 mb-4 rounded-md bg-red-100 text-red-800">
-          {message}
-        </div>
-      )}
-      
-      {successMessage && (
-        <div className="p-4 mb-4 rounded-md bg-green-100 text-green-800">
-          {successMessage}
-        </div>
-      )}
-
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Estado Actual:</h2>
-        {currentNotification ? (
-          <div className="bg-red-600 text-white p-4 rounded-md">
-            <p className="font-medium">{currentNotification}</p>
+    <ProtectedRoute>
+      <div className="container mx-auto py-6">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Panel de Administración</h1>
+            <p className="text-gray-600">Gestione todas las tareas del sistema</p>
           </div>
-        ) : (
-          <p className="text-gray-500">No hay ninguna notificación importante activa.</p>
-        )}
-      </div>
-
-      <form onSubmit={handleSubmit} className="mb-6">
-        <div className="mb-4">
-          <label htmlFor="notification" className="block text-sm font-medium text-gray-700 mb-1">
-            Mensaje de Notificación Importante
-          </label>
-          <textarea
-            id="notification"
-            value={notification}
-            onChange={(e) => setNotification(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={3}
-            placeholder="Ingrese el mensaje para la notificación importante..."
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            Deje este campo vacío para eliminar la notificación.
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {isLoading ? 'Guardando...' : 'Guardar Notificación'}
-          </button>
-          
-          {currentNotification && (
+          <div className="flex gap-3">
             <button
-              type="button"
-              onClick={handleClear}
-              disabled={isLoading}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+              onClick={() => router.push('/')}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300"
             >
-              {isLoading ? 'Eliminando...' : 'Eliminar Notificación'}
+              Volver al Dashboard
             </button>
-          )}
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-500 text-white rounded-md text-sm font-medium hover:bg-red-600"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
         </div>
-      </form>
-
-      <div className="border-t border-gray-200 pt-4">
-        <a href="/" className="text-blue-600 hover:underline">
-          ← Volver al Panel Principal
-        </a>
+        
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <TaskManager />
+        </div>
       </div>
-      
-      <div className="mt-4 p-4 bg-blue-50 rounded-md">
-        <p className="text-sm text-blue-800">
-          Nota: Las notificaciones creadas o actualizadas aquí aparecerán automáticamente en la página principal.
-        </p>
-      </div>
-    </div>
+    </ProtectedRoute>
   );
 } 
