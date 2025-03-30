@@ -9,7 +9,11 @@ Aplicación web interna para visualizar el estado de tareas del equipo, proporci
 - Visualización de distribución por estado, prioridad y responsable
 - Alerta visual de tareas próximas a vencer
 - Diseño responsivo y moderno
+- Sistema de autenticación de usuarios
+- Panel de administración para gestión de datos
 - Completamente dockerizado
+- Integración con Google Sheets para importación de datos
+- Sistema de notificaciones
 
 ## Tecnologías
 
@@ -18,6 +22,8 @@ Aplicación web interna para visualizar el estado de tareas del equipo, proporci
 - Tailwind CSS
 - Recharts para gráficos
 - Docker
+- API de Google Sheets
+- JSON Server para datos de desarrollo
 
 ## Requisitos previos
 
@@ -36,6 +42,12 @@ docker build -t dashboard-tareas:latest .
 
 ```bash
 docker run -p 3000:3000 dashboard-tareas:latest
+```
+
+También puede utilizar docker-compose:
+
+```bash
+docker-compose up -d
 ```
 
 3. Acceder a la aplicación en su navegador:
@@ -63,8 +75,20 @@ npm run dev
 ## Estructura del proyecto
 
 - `/app` - Código fuente de la aplicación Next.js
+  - `/admin` - Panel de administración
+  - `/api` - Endpoints de la API
+  - `/auth` - Configuración de autenticación
   - `/components` - Componentes reutilizables
   - `/lib` - Datos y utilidades
+    - `/auth` - Utilidades de autenticación
+    - `api-client.ts` - Cliente para comunicación con APIs
+    - `db.ts` - Funciones de acceso a datos
+    - `google-sheets-client.ts` - Cliente para integración con Google Sheets
+    - `notification.ts` - Sistema de notificaciones
+    - `types.ts` - Tipos TypeScript
+  - `/login` - Página de inicio de sesión
+- `/data` - Archivos JSON para desarrollo
 - `/public` - Archivos estáticos
 - `Dockerfile` - Configuración para Docker
+- `docker-compose.yml` - Configuración para Docker Compose
 - `.dockerignore` - Archivos a ignorar en la build de Docker 
