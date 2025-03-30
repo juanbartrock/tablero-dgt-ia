@@ -3,7 +3,6 @@ import React from 'react';
 import './globals.css';
 import { AuthProvider } from './lib/auth/auth-context';
 import PulsingTitle from './components/PulsingTitle';
-import { JSX } from 'react';
 
 export const metadata: Metadata = {
   title: 'DGT - Área de Inteligencia Artificial',

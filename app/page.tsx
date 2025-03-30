@@ -14,6 +14,7 @@ import { taskApiClient } from './lib/api-client';
 import { TaskCountsType } from './lib/db';
 import ProtectedRoute from './lib/auth/protected-route';
 import { useAuth } from './lib/auth/auth-context';
+import AlertNotification from './components/AlertNotification';
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -38,6 +39,11 @@ export default function Home() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  
+  // Estado para el modal de notificación
+  const [showNotificationForm, setShowNotificationForm] = useState(false);
+  const [newNotification, setNewNotification] = useState('');
+  const [notificationSuccess, setNotificationSuccess] = useState<string | null>(null);
   
   // Referencia al contenedor de pestañas
   const tabsSectionRef = useRef<HTMLDivElement>(null);
@@ -210,6 +216,33 @@ export default function Home() {
     }
   };
   
+  // Función para guardar notificación
+  const handleSaveNotification = () => {
+    if (!newNotification.trim() || !user) return;
+    
+    const notification = {
+      message: newNotification,
+      timestamp: Date.now(),
+      createdBy: user.username,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Guardar en localStorage
+    localStorage.setItem('important_notification', JSON.stringify(notification));
+    
+    // Notificar al usuario
+    setNewNotification('');
+    setShowNotificationForm(false);
+    setNotificationSuccess('Notificación creada correctamente');
+    
+    // Limpiar el mensaje de éxito después de 2 segundos
+    setTimeout(() => setNotificationSuccess(null), 2000);
+    
+    // Actualizar la visualización de notificaciones
+    // Esto causa que se actualice el componente AlertNotification en React
+    loadData();
+  };
+  
   // Contenido de las pestañas
   const tabsContent = [
     {
@@ -332,135 +365,228 @@ export default function Home() {
   ];
   
   return (
-    <ProtectedRoute>
-      <div className="bg-gradient-to-br from-blue-50 to-slate-100 rounded-lg p-6 shadow-sm">
-        {/* Dashboard */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex-1">
-              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent drop-shadow-sm">Estado de Tareas</h1>
-              <div className="h-1 w-24 bg-gradient-to-r from-primary to-info rounded-full mt-2"></div>
-            </div>
-            <div className="flex items-center gap-4">
-              <p className="text-sm text-gray-500 bg-white px-3 py-2 rounded-md shadow-sm border border-gray-100">
-                Última actualización: {lastUpdate ? format(parseISO(lastUpdate), "d 'de' MMMM 'de' yyyy, HH:mm", { locale: es }) : ''}
-              </p>
-              <div className="flex items-center gap-2">
-                {user && (
-                  <div className="relative">
-                    <div 
-                      className="px-3 py-2 bg-white rounded-md shadow-sm border border-gray-100 text-sm cursor-pointer flex items-center"
-                      onClick={() => setShowPasswordModal(true)}
-                    >
-                      Usuario: <span className="font-medium ml-1">{user.name}</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md shadow-sm text-sm font-medium transition-colors"
-                >
-                  Cerrar Sesión
-                </button>
-                {user && user.username === 'admin' && (
-                  <a href="/admin" className="px-4 py-2 bg-gradient-to-r from-primary to-info text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Administración
-                  </a>
-                )}
+    <>
+      <AlertNotification />
+      
+      <ProtectedRoute>
+        <div className="bg-gradient-to-br from-blue-50 to-slate-100 rounded-lg p-6 shadow-sm">
+          {/* Dashboard */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1">
+                <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent drop-shadow-sm">Estado de Tareas</h1>
+                <div className="h-1 w-24 bg-gradient-to-r from-primary to-info rounded-full mt-2"></div>
               </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-1">
-            <div className="grid grid-cols-2 gap-3 h-full">
-              <KPICard title="Total" value={activeTasks.length} color="success" onClick={() => navigateToSection('task-manager')} />
-              <KPICard title="Pendientes" value={taskCounts['Pendiente']} color="warning" onClick={() => navigateToSection('pending')} />
-              <KPICard title="En Progreso" value={taskCounts['En Progreso']} color="info" onClick={() => navigateToSection('in-progress')} />
-              <KPICard title="Detenida" value={taskCounts['Bloqueada']} color="error" onClick={() => navigateToSection('blocked')} />
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-gray-500 bg-white px-3 py-2 rounded-md shadow-sm border border-gray-100">
+                  Última actualización: {lastUpdate ? format(parseISO(lastUpdate), "d 'de' MMMM 'de' yyyy, HH:mm", { locale: es }) : ''}
+                </p>
+                <div className="flex items-center gap-2">
+                  {user && (
+                    <div className="relative">
+                      <div 
+                        className="px-3 py-2 bg-white rounded-md shadow-sm border border-gray-100 text-sm cursor-pointer flex items-center"
+                        onClick={() => document.getElementById('userDropdown')?.classList.toggle('hidden')}
+                      >
+                        Usuario: <span className="font-medium ml-1">{user.name}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                      
+                      {/* Menú desplegable de usuario */}
+                      <div id="userDropdown" className="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 py-1">
+                        <button
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                          onClick={() => {
+                            document.getElementById('userDropdown')?.classList.add('hidden');
+                            setShowPasswordModal(true);
+                          }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                          Cambiar contraseña
+                        </button>
+                        <button
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                          onClick={() => {
+                            document.getElementById('userDropdown')?.classList.add('hidden');
+                            setShowNotificationForm(true);
+                          }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          Crear notificación
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md shadow-sm text-sm font-medium transition-colors"
+                  >
+                    Cerrar Sesión
+                  </button>
+                  {user && user.username === 'admin' && (
+                    <a href="/admin" className="px-4 py-2 bg-gradient-to-r from-primary to-info text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Administración
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           
-          <div className="lg:col-span-2">
-            <HighlightedTasksList tasks={highlightedTasks} />
-          </div>
-        </div>
-        
-        {/* Sección de Gestión de Tareas */}
-        <div className="border-t border-blue-100 pt-6" id="tabs-section" ref={tabsSectionRef}>
-          <Tabs tabs={tabsContent} defaultTabId={activeTab} />
-        </div>
-        
-        {/* Modal para cambiar contraseña */}
-        {showPasswordModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
-              <div className="px-6 py-4 bg-gradient-to-r from-primary to-info">
-                <h3 className="text-lg font-medium text-white">Cambiar Contraseña</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-1">
+              <div className="grid grid-cols-2 gap-3 h-full">
+                <KPICard title="Total" value={activeTasks.length} color="success" onClick={() => navigateToSection('task-manager')} />
+                <KPICard title="Pendientes" value={taskCounts['Pendiente']} color="warning" onClick={() => navigateToSection('pending')} />
+                <KPICard title="En Progreso" value={taskCounts['En Progreso']} color="info" onClick={() => navigateToSection('in-progress')} />
+                <KPICard title="Detenida" value={taskCounts['Bloqueada']} color="error" onClick={() => navigateToSection('blocked')} />
               </div>
-              
-              <div className="p-6">
-                {passwordError && (
-                  <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 text-red-700" role="alert">
-                    <p>{passwordError}</p>
-                  </div>
-                )}
+            </div>
+            
+            <div className="lg:col-span-2">
+              <HighlightedTasksList tasks={highlightedTasks} />
+            </div>
+          </div>
+          
+          {/* Sección de Gestión de Tareas */}
+          <div className="border-t border-blue-100 pt-6" id="tabs-section" ref={tabsSectionRef}>
+            <Tabs tabs={tabsContent} defaultTabId={activeTab} />
+          </div>
+          
+          {/* Modal para cambiar contraseña */}
+          {showPasswordModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
+                <div className="px-6 py-4 bg-gradient-to-r from-primary to-info">
+                  <h3 className="text-lg font-medium text-white">Cambiar Contraseña</h3>
+                </div>
                 
-                {passwordSuccess && (
-                  <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 text-green-700" role="alert">
-                    <p>{passwordSuccess}</p>
-                  </div>
-                )}
+                <div className="p-6">
+                  {passwordError && (
+                    <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 text-red-700" role="alert">
+                      <p>{passwordError}</p>
+                    </div>
+                  )}
+                  
+                  {passwordSuccess && (
+                    <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 text-green-700" role="alert">
+                      <p>{passwordSuccess}</p>
+                    </div>
+                  )}
+                  
+                  <form onSubmit={handleChangePassword}>
+                    <div className="mb-4">
+                      <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-1">
+                        Contraseña actual
+                      </label>
+                      <input
+                        id="current-password"
+                        type="password"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
+                        Nueva contraseña
+                      </label>
+                      <input
+                        id="new-password"
+                        type="password"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="mb-6">
+                      <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+                        Confirmar nueva contraseña
+                      </label>
+                      <input
+                        id="confirm-password"
+                        type="password"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        onClick={() => {
+                          setShowPasswordModal(false);
+                          setPasswordError(null);
+                          setPasswordSuccess(null);
+                          setCurrentPassword('');
+                          setNewPassword('');
+                          setConfirmPassword('');
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled={isPasswordLoading}
+                      >
+                        {isPasswordLoading ? 'Guardando...' : 'Cambiar Contraseña'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Modal para crear notificación */}
+          {showNotificationForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
+                <div className="px-6 py-4 bg-gradient-to-r from-red-500 to-red-600">
+                  <h3 className="text-lg font-medium text-white">Crear Notificación Importante</h3>
+                </div>
                 
-                <form onSubmit={handleChangePassword}>
-                  <div className="mb-4">
-                    <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-1">
-                      Contraseña actual
-                    </label>
-                    <input
-                      id="current-password"
-                      type="password"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      required
-                    />
-                  </div>
+                <div className="p-6">
+                  {notificationSuccess && (
+                    <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 text-green-700" role="alert">
+                      <p>{notificationSuccess}</p>
+                    </div>
+                  )}
                   
                   <div className="mb-4">
-                    <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
-                      Nueva contraseña
+                    <label htmlFor="notification-text" className="block text-sm font-medium text-gray-700 mb-1">
+                      Mensaje de notificación
                     </label>
-                    <input
-                      id="new-password"
-                      type="password"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                    <textarea
+                      id="notification-text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                      value={newNotification}
+                      onChange={(e) => setNewNotification(e.target.value)}
+                      placeholder="Escribe el mensaje de notificación aquí..."
+                      rows={4}
                       required
                     />
-                  </div>
-                  
-                  <div className="mb-6">
-                    <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-                      Confirmar nueva contraseña
-                    </label>
-                    <input
-                      id="confirm-password"
-                      type="password"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
+                    <p className="mt-2 text-sm text-gray-500">
+                      Esta notificación será visible para todos los usuarios del sistema. Se mostrará en la parte superior de la página.
+                    </p>
                   </div>
                   
                   <div className="flex justify-end space-x-3">
@@ -468,42 +594,39 @@ export default function Home() {
                       type="button"
                       className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                       onClick={() => {
-                        setShowPasswordModal(false);
-                        setPasswordError(null);
-                        setPasswordSuccess(null);
-                        setCurrentPassword('');
-                        setNewPassword('');
-                        setConfirmPassword('');
+                        setShowNotificationForm(false);
+                        setNewNotification('');
                       }}
                     >
                       Cancelar
                     </button>
                     <button
-                      type="submit"
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      disabled={isPasswordLoading}
+                      type="button"
+                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      onClick={handleSaveNotification}
+                      disabled={!newNotification.trim()}
                     >
-                      {isPasswordLoading ? 'Guardando...' : 'Cambiar Contraseña'}
+                      Publicar Notificación
                     </button>
                   </div>
-                </form>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        
-        {/* Estilos para el destacado de secciones */}
-        <style jsx global>{`
-          @keyframes highlightFade {
-            0% { background-color: rgba(59, 130, 246, 0.1); }
-            100% { background-color: transparent; }
-          }
+          )}
           
-          .highlight-section {
-            animation: highlightFade 1s ease-out;
-          }
-        `}</style>
-      </div>
-    </ProtectedRoute>
+          {/* Estilos para el destacado de secciones */}
+          <style jsx global>{`
+            @keyframes highlightFade {
+              0% { background-color: rgba(59, 130, 246, 0.1); }
+              100% { background-color: transparent; }
+            }
+            
+            .highlight-section {
+              animation: highlightFade 1s ease-out;
+            }
+          `}</style>
+        </div>
+      </ProtectedRoute>
+    </>
   );
 } 

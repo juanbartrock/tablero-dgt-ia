@@ -12,6 +12,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
+      // Verificar si React ya está mostrando la notificación (si existe un elemento con clase bg-red-600)
+      const reactNotification = document.querySelector('div.bg-red-600.text-white.p-4.mb-6');
+      if (reactNotification) {
+        // Si React ya está mostrando la notificación, no hacer nada
+        container.innerHTML = '';
+        return;
+      }
+      
       // Intentar obtener la notificación del localStorage
       const storedNotification = localStorage.getItem('important_notification');
       

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Task } from '@/app/lib/types';
 
 interface TasksTableProps {
@@ -10,6 +10,9 @@ interface TasksTableProps {
 }
 
 export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const tasksPerPage = 10;
+
   // Ordenar tareas por ID (de mayor a menor)
   const sortedTasks = [...tasks].sort((a, b) => {
     // Si una tarea está terminada y la otra no, la terminada va al final
@@ -26,6 +29,17 @@ export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps)
     const idB = Number(b.id);
     return idB - idA; // Ordenar de mayor a menor
   });
+
+  // Calcular el total de páginas
+  const totalPages = Math.ceil(sortedTasks.length / tasksPerPage);
+  
+  // Obtener las tareas para la página actual
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = sortedTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  // Función para cambiar de página
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   // Función para presentar responsables, posiblemente separados por comas
   const formatResponsibles = (responsibles: string) => {
@@ -63,105 +77,163 @@ export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps)
   };
 
   return (
-    <div className="mt-6 overflow-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Descripción</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comentario</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Responsable(s)</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridad</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Importante</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Áreas Vinculadas</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destacada</th>
-            {(onEdit || onDelete) && (
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-            )}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {sortedTasks.length === 0 ? (
+    <div className="mt-6">
+      <div className="overflow-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <td colSpan={onEdit || onDelete ? 10 : 9} className="px-6 py-4 text-center text-sm text-gray-500">
-                No hay tareas para mostrar.
-              </td>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Descripción</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Comentario</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridad</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Importante</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Áreas Vinculadas</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Responsable(s)</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Destacada</th>
+              {(onEdit || onDelete) && (
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              )}
             </tr>
-          ) : (
-            sortedTasks.map((task) => (
-              <tr key={String(task.id)}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{String(task.id)}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  <div className="break-words">{task.description || '-'}</div>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {currentTasks.length === 0 ? (
+              <tr>
+                <td colSpan={onEdit || onDelete ? 10 : 9} className="px-6 py-4 text-center text-sm text-gray-500">
+                  No hay tareas para mostrar.
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  {task.comment ? (
-                    <div className="max-w-xs truncate" title={task.comment}>
-                      {task.comment}
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${task.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' : 
-                      task.status === 'En Progreso' ? 'bg-blue-100 text-blue-800' : 
-                      task.status === 'Bloqueada' ? 'bg-red-100 text-red-800' :
-                      'bg-green-100 text-green-800'}`}>
-                    {task.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                  {formatResponsibles(task.responsible)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${task.priority === 'Alta' ? 'bg-red-100 text-red-800' : 
-                      task.priority === 'Media' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-green-100 text-green-800'}`}>
-                    {task.priority}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {task.importantDate || '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatLinkedAreas(task.linkedAreas)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                  {task.highlighted ? (
-                    <span className="text-yellow-500 text-lg">★</span>
-                  ) : (
-                    <span className="text-gray-300 text-lg">☆</span>
-                  )}
-                </td>
-                {(onEdit || onDelete) && (
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    {onEdit && (
-                      <button
-                        onClick={() => onEdit(task)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-3"
-                      >
-                        Editar
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button
-                        onClick={() => onDelete(task.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Eliminar
-                      </button>
+              </tr>
+            ) : (
+              currentTasks.map((task) => (
+                <tr key={String(task.id)}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{String(task.id)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="break-words">{task.description || '-'}</div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {task.comment ? (
+                      <div className="max-w-xs text-justify whitespace-normal break-words">
+                        {task.comment}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">-</span>
                     )}
                   </td>
-                )}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                      ${task.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' : 
+                        task.status === 'En Progreso' ? 'bg-blue-100 text-blue-800' : 
+                        task.status === 'Bloqueada' ? 'bg-red-100 text-red-800' :
+                        'bg-green-100 text-green-800'}`}>
+                      {task.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                      ${task.priority === 'Alta' ? 'bg-red-100 text-red-800' : 
+                        task.priority === 'Media' ? 'bg-yellow-100 text-yellow-800' : 
+                        'bg-green-100 text-green-800'}`}>
+                      {task.priority}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {task.importantDate || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatLinkedAreas(task.linkedAreas)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                    {formatResponsibles(task.responsible)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    {task.highlighted ? (
+                      <span className="text-yellow-500 text-lg">★</span>
+                    ) : (
+                      <span className="text-gray-300 text-lg">☆</span>
+                    )}
+                  </td>
+                  {(onEdit || onDelete) && (
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      {onEdit && (
+                        <button
+                          onClick={() => onEdit(task)}
+                          className="text-indigo-600 hover:text-indigo-900 mr-3"
+                        >
+                          Editar
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          onClick={() => onDelete(task.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex justify-between items-center">
+          <div className="text-sm text-gray-700">
+            Mostrando {indexOfFirstTask + 1}-{Math.min(indexOfLastTask, sortedTasks.length)} de {sortedTasks.length} tareas
+          </div>
+          <div className="flex space-x-1">
+            <button
+              onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            {[...Array(totalPages)].map((_, index) => {
+              const pageNumber = index + 1;
+              // Mostrar solo 5 páginas alrededor de la página actual
+              if (
+                pageNumber === 1 || 
+                pageNumber === totalPages || 
+                (pageNumber >= currentPage - 2 && pageNumber <= currentPage + 2)
+              ) {
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => paginate(pageNumber)}
+                    className={`px-3 py-1 rounded-md text-sm ${
+                      currentPage === pageNumber
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              }
+              // Mostrar elipsis para indicar páginas omitidas
+              if (
+                (pageNumber === 2 && currentPage > 4) ||
+                (pageNumber === totalPages - 1 && currentPage < totalPages - 3)
+              ) {
+                return <span key={pageNumber} className="px-2 py-1">...</span>;
+              }
+              return null;
+            })}
+            <button
+              onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 disabled:opacity-50"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
