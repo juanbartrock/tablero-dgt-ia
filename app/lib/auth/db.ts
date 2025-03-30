@@ -202,10 +202,11 @@ class AuthDB {
   
   async getAllVisits(): Promise<Visit[]> {
     this.initDb();
-    console.log('Leyendo visitas desde:', this.visitsPath);
+    const dataPath = path.join(process.cwd(), 'data', 'visits.json');
+    console.log('Leyendo visitas desde:', dataPath);
     try {
-      if (fs.existsSync(this.visitsPath)) {
-        const data = fs.readFileSync(this.visitsPath, 'utf-8');
+      if (fs.existsSync(dataPath)) {
+        const data = fs.readFileSync(dataPath, 'utf-8');
         const visits = JSON.parse(data);
         console.log('Total de visitas leídas del archivo:', visits.length);
         return [...visits].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
