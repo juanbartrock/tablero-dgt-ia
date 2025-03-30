@@ -30,6 +30,15 @@ export default function Home() {
   const [isScrolling, setIsScrolling] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string>('');
   
+  // Estados para el modal de cambio de contraseña
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  
   // Referencia al contenedor de pestañas
   const tabsSectionRef = useRef<HTMLDivElement>(null);
   
@@ -130,6 +139,75 @@ export default function Home() {
   const handleLogout = () => {
     logout();
     window.location.href = '/login';
+  };
+  
+  // Función para cambiar la contraseña
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    // Verificar que el usuario esté autenticado
+    if (!user) {
+      setPasswordError('No hay sesión activa. Por favor, inicie sesión nuevamente.');
+      return;
+    }
+
+    // Validaciones
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('Todos los campos son obligatorios');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('La nueva contraseña y su confirmación no coinciden');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('La nueva contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    try {
+      setIsPasswordLoading(true);
+      
+      const response = await fetch(`/api/auth/users/${user.id}/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setPasswordError(data.message || 'Error al cambiar la contraseña');
+        return;
+      }
+
+      setPasswordSuccess('Contraseña actualizada correctamente');
+      // Limpiar campos
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      
+      // Cerrar el modal después de 2 segundos
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordSuccess(null);
+      }, 2000);
+      
+    } catch (err) {
+      console.error('Error al cambiar contraseña:', err);
+      setPasswordError('Error de conexión con el servidor');
+    } finally {
+      setIsPasswordLoading(false);
+    }
   };
   
   // Contenido de las pestañas
@@ -269,8 +347,16 @@ export default function Home() {
               </p>
               <div className="flex items-center gap-2">
                 {user && (
-                  <div className="px-3 py-2 bg-white rounded-md shadow-sm border border-gray-100 text-sm">
-                    Usuario: <span className="font-medium">{user.name}</span>
+                  <div className="relative">
+                    <div 
+                      className="px-3 py-2 bg-white rounded-md shadow-sm border border-gray-100 text-sm cursor-pointer flex items-center"
+                      onClick={() => setShowPasswordModal(true)}
+                    >
+                      Usuario: <span className="font-medium ml-1">{user.name}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                 )}
                 <button
@@ -312,6 +398,99 @@ export default function Home() {
         <div className="border-t border-blue-100 pt-6" id="tabs-section" ref={tabsSectionRef}>
           <Tabs tabs={tabsContent} defaultTabId={activeTab} />
         </div>
+        
+        {/* Modal para cambiar contraseña */}
+        {showPasswordModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
+              <div className="px-6 py-4 bg-gradient-to-r from-primary to-info">
+                <h3 className="text-lg font-medium text-white">Cambiar Contraseña</h3>
+              </div>
+              
+              <div className="p-6">
+                {passwordError && (
+                  <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 text-red-700" role="alert">
+                    <p>{passwordError}</p>
+                  </div>
+                )}
+                
+                {passwordSuccess && (
+                  <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 text-green-700" role="alert">
+                    <p>{passwordSuccess}</p>
+                  </div>
+                )}
+                
+                <form onSubmit={handleChangePassword}>
+                  <div className="mb-4">
+                    <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-1">
+                      Contraseña actual
+                    </label>
+                    <input
+                      id="current-password"
+                      type="password"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
+                      Nueva contraseña
+                    </label>
+                    <input
+                      id="new-password"
+                      type="password"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-6">
+                    <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+                      Confirmar nueva contraseña
+                    </label>
+                    <input
+                      id="confirm-password"
+                      type="password"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                      onClick={() => {
+                        setShowPasswordModal(false);
+                        setPasswordError(null);
+                        setPasswordSuccess(null);
+                        setCurrentPassword('');
+                        setNewPassword('');
+                        setConfirmPassword('');
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      disabled={isPasswordLoading}
+                    >
+                      {isPasswordLoading ? 'Guardando...' : 'Cambiar Contraseña'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Estilos para el destacado de secciones */}
         <style jsx global>{`
