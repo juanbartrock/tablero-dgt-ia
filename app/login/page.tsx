@@ -3,6 +3,7 @@
 import React, { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../lib/auth/auth-context';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -42,10 +43,15 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h2 className="text-3xl font-extrabold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent drop-shadow-sm">
-            DGT - Área Inteligencia Artificial
-          </h2>
-          <p className="mt-2 text-gray-600">Iniciar Sesión</p>
+          <div className="flex justify-center mb-6">
+            <Image 
+              src="/images/logo-area-ia.png.png" 
+              alt="Logo" 
+              width={180} 
+              height={180} 
+              className="rounded-lg"
+            />
+          </div>
         </div>
         
         <div className="rounded-lg bg-white p-8 shadow-md">
@@ -94,11 +100,6 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
-          
-          <div className="mt-6 text-center text-xs text-gray-500">
-            <p>Usuario por defecto: admin</p>
-            <p>Contraseña por defecto: admin123</p>
-          </div>
         </div>
       </div>
     </div>

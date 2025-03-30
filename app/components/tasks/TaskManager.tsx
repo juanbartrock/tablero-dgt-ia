@@ -5,8 +5,10 @@ import { Task } from '@/app/lib/types';
 import TasksTable from './TasksTable';
 import TaskForm from './TaskForm';
 import { taskApiClient } from '@/app/lib/api-client';
+import { useAuth } from '@/app/lib/auth/auth-context';
 
 export default function TaskManager() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +18,9 @@ export default function TaskManager() {
   const [importing, setImporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchField, setSearchField] = useState('description');
+
+  // Verificar si el usuario actual es admin
+  const isAdmin = user?.username === 'admin';
 
   // Cargar las tareas
   const loadTasks = async () => {
@@ -206,20 +211,24 @@ export default function TaskManager() {
           </button>
         </div>
         <div className="flex">
-          <button
-            onClick={handleImportTasks}
-            disabled={importing || loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:bg-blue-300 mr-2"
-          >
-            {importing ? 'Importando...' : 'Importar desde Google Sheets'}
-          </button>
-          <button
-            onClick={handleDeleteAllTasks}
-            disabled={loading || tasks.length === 0}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors"
-          >
-            {loading ? 'Procesando...' : 'Eliminar todas las tareas'}
-          </button>
+          {isAdmin ? (
+            <>
+              <button
+                onClick={handleImportTasks}
+                disabled={importing || loading}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:bg-blue-300 mr-2"
+              >
+                {importing ? 'Importando...' : 'Importar desde Google Sheets'}
+              </button>
+              <button
+                onClick={handleDeleteAllTasks}
+                disabled={loading || tasks.length === 0}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors"
+              >
+                {loading ? 'Procesando...' : 'Eliminar todas las tareas'}
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
       

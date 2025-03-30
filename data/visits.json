@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:17:34.673Z"
+  },
+  {
+    "id": 2,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:17:43.268Z"
+  },
+  {
+    "id": 3,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:18:05.821Z"
+  },
+  {
+    "id": 4,
+    "userId": 2,
+    "username": "hr",
+    "userName": "Hernán Rondinella",
+    "timestamp": "2025-03-30T04:18:34.026Z"
+  },
+  {
+    "id": 5,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:26:19.659Z"
+  },
+  {
+    "id": 6,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:26:21.745Z"
+  },
+  {
+    "id": 7,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:28:50.517Z"
+  },
+  {
+    "id": 8,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:32:22.349Z"
+  },
+  {
+    "id": 9,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:32:23.320Z"
+  },
+  {
+    "id": 10,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:38:53.559Z"
+  },
+  {
+    "id": 11,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:38:56.250Z"
+  },
+  {
+    "id": 12,
+    "userId": 2,
+    "username": "hr",
+    "userName": "Hernán Rondinella",
+    "timestamp": "2025-03-30T04:39:14.290Z"
+  },
+  {
+    "id": 13,
+    "userId": 2,
+    "username": "hr",
+    "userName": "Hernán Rondinella",
+    "timestamp": "2025-03-30T04:49:29.548Z"
+  },
+  {
+    "id": 14,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:49:41.800Z"
+  },
+  {
+    "id": 15,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:50:18.817Z"
+  },
+  {
+    "id": 16,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:55:58.309Z"
+  },
+  {
+    "id": 17,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:56:10.535Z"
+  },
+  {
+    "id": 18,
+    "userId": 1,
+    "username": "admin",
+    "userName": "Juan Pablo Pautasso",
+    "timestamp": "2025-03-30T04:56:56.568Z"
+  }
+]

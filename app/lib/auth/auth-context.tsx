@@ -43,7 +43,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const storedUser = localStorage.getItem('auth_user');
         
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          
+          // Registrar la visita al recuperar la sesión
+          try {
+            await fetch('/api/auth/validate-login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ user: parsedUser }),
+            });
+          } catch (err) {
+            console.error('Error al registrar visita:', err);
+          }
         }
       } catch (err) {
         console.error('Error al verificar sesión:', err);
@@ -77,6 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(data.user);
       localStorage.setItem('auth_user', JSON.stringify(data.user));
+      
+      // La visita ya se registra en el backend durante la validación del usuario
+      
       return true;
     } catch (err) {
       console.error('Error en login:', err);
