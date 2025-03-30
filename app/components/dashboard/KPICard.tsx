@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import * as React from 'react';
 
 interface KPICardProps {
   title: string;
@@ -23,13 +23,13 @@ export default function KPICard({ title, value, color = 'primary', icon, onClick
   
   return (
     <div 
-      className={`rounded-lg shadow-md p-5 border-l-4 ${getStyles()} h-full flex flex-row items-center justify-between transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px] cursor-pointer`}
+      className={`rounded-lg shadow-md p-6 border-l-4 ${getStyles()} h-full flex flex-row items-center justify-between transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px] cursor-pointer`}
       onClick={onClick}
     >
-      {icon && <div className="text-3xl mr-4 opacity-80">{icon}</div>}
-      <div className={`flex flex-col ${icon ? 'items-end' : 'items-center w-full'}`}>
-        <p className="text-gray-600 text-sm font-medium mb-1">{title}</p>
-        <h2 className="text-3xl font-bold">{value}</h2>
+      {icon && <div className="text-5xl mr-4 opacity-80">{icon}</div>}
+      <div className={`flex flex-col ${icon ? 'items-end' : 'items-center w-full'} py-2`}>
+        <p className="text-gray-700 text-lg font-semibold mb-2">{title}</p>
+        <h2 className="text-5xl font-bold">{value}</h2>
       </div>
     </div>
   );
