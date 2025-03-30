@@ -1,0 +1,32 @@
+# Sistema
+.git
+.github
+.DS_Store
+
+# Dependencias
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build
+.next
+out
+
+# Entorno
+.env*
+!.env.example
+
+# Archivos de IDE
+.idea
+.vscode
+
+# Pruebas
+coverage
+.nyc_output
+__tests__
+
+# Otros
+README.md
+LICENSE
+*.md 
