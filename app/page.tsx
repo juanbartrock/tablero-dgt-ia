@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Tabs from './components/Tabs';
-import KPICard from './components/dashboard/KPICard';
+import DirectKPI from './components/dashboard/DirectKPI';
 import StatusChart from './components/dashboard/StatusChart';
 import UpcomingTasksList from './components/dashboard/UpcomingTasksList';
-import HighlightedTasksList from './components/dashboard/HighlightedTasksList';
+import DirectHighlighted from './components/dashboard/DirectHighlighted';
 import TaskManager from './components/tasks/TaskManager';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -273,29 +273,14 @@ export default function Home() {
     // Forzar estado de carga para actualizar la UI
     setIsLoading(true);
     
-    // Usar Promise para asegurar que todas las llamadas a la API se completen
-    // Establecer un pequeño retraso para asegurar que la BD esté actualizada
-    setTimeout(async () => {
-      try {
-        // Recargar todos los datos forzando bypass de caché
-        console.log('🔄 Home - handleTasksUpdated: Ejecutando recarga de datos con anti-caché...');
-        
-        // Usar la función loadData con bypass de caché
-        await loadData(true);
-        
-        // Hacemos un segundo intento después de un pequeño retraso
-        // para asegurar que todos los datos se han actualizado correctamente
-        setTimeout(async () => {
-          console.log('🔄 Home - handleTasksUpdated: Ejecutando segunda recarga por seguridad...');
-          await loadData(true);
-        }, 1000);
-        
-      } catch (error: any) {
-        console.error('❌ Home - handleTasksUpdated: Error al recargar los datos:', error);
-        setFetchError('Error al actualizar los datos después de modificar tareas');
-        setIsLoading(false);
-      }
-    }, 300); // Pequeño retraso para dar tiempo a que la BD se actualice completamente
+    // Realizar una carga inmediata
+    loadData(true);
+    
+    // Programar una segunda carga después de un retraso para asegurar
+    // que todas las operaciones de base de datos se han completado
+    setTimeout(() => {
+      loadData(true);
+    }, 1000);
   };
 
   // Contenido de las pestañas
@@ -501,15 +486,35 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-1">
               <div className="grid grid-cols-2 gap-3 h-full">
-                <KPICard title="Total" value={activeTasks.length} color="success" onClick={() => navigateToSection('task-manager')} />
-                <KPICard title="Pendientes" value={taskCounts['Pendiente']} color="warning" onClick={() => navigateToSection('pending')} />
-                <KPICard title="En Progreso" value={taskCounts['En Progreso']} color="info" onClick={() => navigateToSection('in-progress')} />
-                <KPICard title="Detenida" value={taskCounts['Bloqueada']} color="error" onClick={() => navigateToSection('blocked')} />
+                <DirectKPI 
+                  title="Total" 
+                  value={allTasks.length} 
+                  color="success" 
+                  onClick={() => navigateToSection('task-manager')} 
+                />
+                <DirectKPI 
+                  title="Pendientes" 
+                  value={taskCounts['Pendiente']} 
+                  color="warning" 
+                  onClick={() => navigateToSection('pending')} 
+                />
+                <DirectKPI 
+                  title="En Progreso" 
+                  value={taskCounts['En Progreso']} 
+                  color="info" 
+                  onClick={() => navigateToSection('in-progress')} 
+                />
+                <DirectKPI 
+                  title="Detenida" 
+                  value={taskCounts['Bloqueada']} 
+                  color="error" 
+                  onClick={() => navigateToSection('blocked')} 
+                />
               </div>
             </div>
             
             <div className="lg:col-span-2">
-              <HighlightedTasksList tasks={highlightedTasks} />
+              <DirectHighlighted tasks={highlightedTasks} />
             </div>
           </div>
           
