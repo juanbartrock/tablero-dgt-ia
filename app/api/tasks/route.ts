@@ -4,14 +4,14 @@ import { Task } from '@/app/lib/types'; // Importar el tipo Task si es necesario
 
 // GET - Obtener todas las tareas
 export async function GET(request: NextRequest) {
-  console.log('API GET /api/tasks - Handler invoked'); // Log inicial
+  console.log('📥 API GET /api/tasks - Handler invocado');
   try {
-    console.log('API GET /api/tasks - Calling getAllTasks()...'); // Log antes de llamar
+    console.log('📥 API GET /api/tasks - Llamando a getAllTasks()...');
     const tasks = await getAllTasks();
-    console.log('API GET /api/tasks - getAllTasks() returned:', tasks); // Log del resultado
+    console.log(`📥 API GET /api/tasks - getAllTasks() devolvió ${tasks.length} tareas`);
     return NextResponse.json({ tasks });
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error('❌ Error obteniendo tareas:', error);
     return NextResponse.json(
       { message: 'Error interno del servidor al obtener tareas' },
       { status: 500 }
@@ -21,11 +21,14 @@ export async function GET(request: NextRequest) {
 
 // POST - Crear una nueva tarea
 export async function POST(request: NextRequest) {
+  console.log('📥 API POST /api/tasks - Handler invocado');
   try {
     const taskData: Omit<Task, 'id'> = await request.json();
+    console.log('📥 API POST /api/tasks - Datos recibidos:', taskData);
 
     // Validación básica (se podrían añadir más validaciones específicas)
     if (!taskData || typeof taskData.description !== 'string' || !taskData.description.trim()) {
+      console.log('❌ API POST /api/tasks - Validación fallida: descripción requerida');
       return NextResponse.json(
         { message: 'Datos de tarea inválidos. La descripción es obligatoria.' },
         { status: 400 }
@@ -36,14 +39,15 @@ export async function POST(request: NextRequest) {
     taskData.status = taskData.status || 'Pendiente';
     taskData.priority = taskData.priority || 'Media';
     taskData.linkedAreas = taskData.linkedAreas || [];
-    // ... otras validaciones o valores por defecto si son necesarios
-
+    console.log('📥 API POST /api/tasks - Llamando a createTask()...');
+    
     const newTask = await createTask(taskData);
+    console.log('✅ API POST /api/tasks - Tarea creada exitosamente:', newTask);
     
     return NextResponse.json({ task: newTask }, { status: 201 }); // 201 Created
 
   } catch (error) {
-    console.error('Error creating task:', error);
+    console.error('❌ Error creando tarea:', error);
     return NextResponse.json(
       { message: 'Error interno del servidor al crear la tarea' },
       { status: 500 }

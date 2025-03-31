@@ -64,10 +64,12 @@ export default function Home() {
   const loadData = async () => {
     if (!user) return;
     
+    console.log('🔄 Home - loadData: Iniciando carga de datos...');
     setIsLoading(true);
     setFetchError(null);
     
     try {
+      console.log('🔄 Home - loadData: Realizando peticiones a la API...');
       const [ 
         activeData, 
         allData, 
@@ -82,14 +84,19 @@ export default function Home() {
         fetchData<{ lastUpdate: string }>('/api/tasks/last-update')
       ]);
 
+      console.log('🔄 Home - loadData: Peticiones completadas, actualizando estados...');
+      console.log('📊 Tareas totales recibidas:', allData.tasks?.length || 0);
+      console.log('📊 Tareas destacadas recibidas:', highlightedData.tasks?.length || 0);
+      
       setActiveTasks(activeData.tasks || []);
       setAllTasks(allData.tasks || []);
       setTaskCounts(countsData.counts || { 'Pendiente': 0, 'En Progreso': 0, 'Bloqueada': 0, 'Terminada': 0 });
       setHighlightedTasks(highlightedData.tasks || []);
       setLastUpdate(lastUpdateData.lastUpdate || new Date().toISOString());
+      console.log('✅ Home - loadData: Estados actualizados correctamente');
       
     } catch (error: any) {
-      console.error('Error al cargar los datos:', error);
+      console.error('❌ Error al cargar los datos:', error);
       setFetchError(error.message || 'Ocurrió un error al cargar los datos.');
     } finally {
       setIsLoading(false);

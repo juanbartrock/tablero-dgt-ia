@@ -85,6 +85,11 @@ export async function createTask(taskData: Omit<Task, 'id'>): Promise<Task> {
       comment 
   } = taskData;
 
+  console.log('🔍 db.ts - createTask: Creando tarea con datos:', {
+    description, status, responsible, linkedAreas, 
+    importantDate, priority, highlighted, comment
+  });
+
   // Convertir a snake_case para la DB y asegurar null para fecha inválida
   const dbImportantDate = importantDate && !isNaN(new Date(importantDate).getTime()) 
                           ? new Date(importantDate).toISOString().split('T')[0] 
@@ -99,13 +104,18 @@ export async function createTask(taskData: Omit<Task, 'id'>): Promise<Task> {
       // Pasar los valores correspondientes (linkedAreas necesita ir como array)
       [description, status, responsible, linkedAreas, dbImportantDate, priority, highlighted, comment]
     );
+    
     if (result.rows.length > 0) {
       // Mapear la fila devuelta al tipo Task
-      return mapRowToTask(result.rows[0]);
+      console.log('✅ db.ts - createTask: Tarea creada exitosamente, row devuelta:', result.rows[0]);
+      const newTask = mapRowToTask(result.rows[0]);
+      console.log('✅ db.ts - createTask: Tarea mapeada:', newTask);
+      return newTask;
     }
+    
     throw new Error('Task creation failed, no row returned.');
   } catch (error) {
-    console.error('Error creating task:', error);
+    console.error('❌ db.ts - Error al crear tarea:', error);
     throw error;
   }
 }
@@ -242,15 +252,26 @@ export async function getTaskCounts(): Promise<TaskCountsType> {
   }
 }
 
-// Obtener tareas destacadas (modificada para usar SQL)
+// Obtener tareas destacadas
 export async function getHighlightedTasks(): Promise<Task[]> {
-   try {
+  try {
+    console.log('🔍 db.ts - getHighlightedTasks: Consultando tareas destacadas');
     // Seleccionar solo las tareas donde highlighted = true
     const result = await query("SELECT * FROM tasks WHERE highlighted = TRUE ORDER BY created_at DESC");
-    return result.rows.map(mapRowToTask);
+    console.log(`🔍 db.ts - getHighlightedTasks: Se encontraron ${result.rows.length} tareas destacadas`);
+    
+    // Log adicional para mostrar las filas encontradas
+    if (result.rows.length > 0) {
+      console.log('🔍 db.ts - Primera fila de datos de tarea destacada:', result.rows[0]);
+    } else {
+      console.log('🔍 db.ts - No se encontraron tareas destacadas');
+    }
+    
+    const tasks = result.rows.map(mapRowToTask);
+    return tasks;
   } catch (error) {
-    console.error('Error fetching highlighted tasks:', error);
-    throw error; // O devolver []
+    console.error('❌ db.ts - Error al obtener tareas destacadas:', error);
+    throw error; // Propagar el error para manejarlo en la capa de API
   }
 }
 

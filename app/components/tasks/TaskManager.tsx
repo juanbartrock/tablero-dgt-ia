@@ -120,13 +120,15 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
     let method = 'POST';
 
     try {
-      console.log('Datos de tarea recibidos para guardar:', taskData);
+      console.log('📝 TaskManager - handleSaveTask: Datos de tarea recibidos:', taskData);
       
       if ('id' in taskData && taskData.id) {
         // Actualizar tarea existente
-        console.log('Actualizando tarea existente con ID:', taskData.id);
+        console.log('📝 TaskManager - handleSaveTask: Actualizando tarea con ID:', taskData.id);
         url = `/api/tasks/${taskData.id}`;
         method = 'PUT';
+      } else {
+        console.log('📝 TaskManager - handleSaveTask: Creando nueva tarea');
       }
       
       const response = await fetch(url, {
@@ -141,17 +143,21 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
         throw new Error(data.message || (method === 'POST' ? 'Error al crear la tarea' : 'Error al actualizar la tarea'));
       }
       
+      console.log('✅ TaskManager - handleSaveTask: Tarea guardada exitosamente:', data);
+      
       // Cerrar el formulario y resetear la tarea actual
       setShowForm(false);
       setCurrentTask(undefined);
-      onTasksUpdated(); // Llamar al callback para recargar
-      // Ya no actualizamos estado local aquí
+      
+      console.log('🔄 TaskManager - handleSaveTask: Llamando a onTasksUpdated para actualizar UI...');
+      // Llamar al callback para recargar datos
+      onTasksUpdated();
 
     } catch (err: any) {
-      console.error('Error al guardar la tarea:', err);
+      console.error('❌ TaskManager - handleSaveTask: Error al guardar tarea:', err);
       setError(err.message || 'Error al guardar la tarea. Por favor, intente nuevamente.');
     } finally {
-        setActionLoading(false);
+      setActionLoading(false);
     }
   };
 

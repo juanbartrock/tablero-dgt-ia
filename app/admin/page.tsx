@@ -3,13 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { getImportantNotification, setImportantNotification, clearImportantNotification } from '../lib/notification';
 import { useRouter } from 'next/navigation';
-import TaskManager from '../components/tasks/TaskManager';
 import ProtectedRoute from '../lib/auth/protected-route';
 import { useAuth } from '../lib/auth/auth-context';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
-import { Task } from '../lib/types';
 
 declare global {
   interface Window {
@@ -80,25 +78,16 @@ export default function AdminPage() {
   const [notificationsHistory, setNotificationsHistory] = useState<NotificationItem[]>([]);
   const [deletedNotifications, setDeletedNotifications] = useState<any[]>([]);
   
-  // --- Nuevos estados para tareas en Admin --- 
-  const [adminTasks, setAdminTasks] = useState<Task[]>([]);
-  const [isAdminTasksLoading, setIsAdminTasksLoading] = useState(true);
-  const [adminTasksError, setAdminTasksError] = useState<string | null>(null);
-  // ------------------------------------------
-  
   // Cargar datos iniciales y configurar actualización periódica
   useEffect(() => {
     const loadData = async () => {
       // Cargar todo en paralelo donde sea posible
-      setIsAdminTasksLoading(true); // Iniciar carga de tareas
       await Promise.all([
           loadNotification(),
           loadVisits(),
           loadUsers(),
-          loadAdminTasks() // Cargar tareas
       ]);
       loadNotificationData(); // Esta parece depender de datos en localStorage
-      setIsAdminTasksLoading(false); // Finalizar carga de tareas (al menos el intento)
     };
     
     loadData();
@@ -519,30 +508,6 @@ export default function AdminPage() {
     }
   };
 
-  // --- Nueva función para cargar tareas --- 
-  const loadAdminTasks = async () => {
-      setAdminTasksError(null);
-      // No ponemos loading aquí porque se controla en el useEffect principal
-      // setIsAdminTasksLoading(true); 
-      try {
-          const response = await fetch('/api/tasks');
-          if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.message || 'Error al cargar las tareas');
-          }
-          const data = await response.json();
-          setAdminTasks(data.tasks || []);
-      } catch (error: any) {
-          console.error('Error al cargar las tareas (Admin):', error);
-          setAdminTasksError(error.message || 'No se pudieron cargar las tareas.');
-          setAdminTasks([]); // Limpiar tareas en caso de error
-      } finally {
-         // Ya no controlamos loading aquí directamente
-         // setIsAdminTasksLoading(false);
-      }
-  };
-  // --------------------------------------
-
   return (
     <ProtectedRoute>
       <div className="container mx-auto py-6">
@@ -616,18 +581,6 @@ export default function AdminPage() {
                 onClick={() => changeTab('visits')}
               >
                 Registro de Visitas
-              </button>
-            </li>
-            <li className="mr-2">
-              <button
-                onClick={() => changeTab('tasks')}
-                className={`px-4 py-2 text-sm font-medium ${
-                  activeTab === 'tasks'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Gestión de Tareas
               </button>
             </li>
           </ul>
@@ -913,32 +866,6 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
-          
-          {/* Sección de Gestión de Tareas */}
-          {activeTab === 'tasks' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Gestión de Tareas</h2>
-              {adminTasksError && (
-                   <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
-                      Error al cargar tareas: {adminTasksError}
-                   </div>
-              )}
-              {/* Mostrar carga o TaskManager */} 
-              {isAdminTasksLoading ? (
-                  <div className="text-center p-4">
-                      <p className="text-gray-500">Cargando tareas...</p>
-                  </div>
-              ) : adminTasksError ? null : ( // No mostrar TaskManager si hubo error
-                  <> {/* Log ya no es necesario aquí si controlamos carga */} 
-                      {/* {(() => { console.log('AdminPage - Rendering TaskManager with initialTasks:', adminTasks); return null; })()} */}
-                      <TaskManager 
-                          initialTasks={adminTasks} 
-                          onTasksUpdated={loadAdminTasks} 
-                      />
-                  </>
-              )}
             </div>
           )}
 
