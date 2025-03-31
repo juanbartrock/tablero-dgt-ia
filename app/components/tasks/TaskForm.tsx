@@ -7,9 +7,10 @@ interface TaskFormProps {
   task?: Task;
   onSubmit: (task: Omit<Task, 'id'> | Task) => Promise<void>;
   onCancel: () => void;
+  isLoading: boolean;
 }
 
-export default function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
+export default function TaskForm({ task, onSubmit, onCancel, isLoading }: TaskFormProps) {
   const [formData, setFormData] = useState<Omit<Task, 'id'>>({
     description: task?.description || '',
     status: task?.status || 'Pendiente',
@@ -22,7 +23,6 @@ export default function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   });
   
   const [linkedAreaInput, setLinkedAreaInput] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
@@ -54,7 +54,6 @@ export default function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
     try {
       const taskToSubmit = task?.id 
@@ -64,9 +63,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
       console.log('Enviando tarea para guardar:', taskToSubmit);
       await onSubmit(taskToSubmit);
     } catch (error) {
-      console.error('Error al guardar la tarea:', error);
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error en el submit del formulario (TaskForm):', error);
     }
   };
   
@@ -231,16 +228,17 @@ export default function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+          disabled={isLoading}
+          className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
           Cancelar
         </button>
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:bg-blue-300"
+          disabled={isLoading}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'Guardando...' : task ? 'Actualizar Tarea' : 'Crear Tarea'}
+          {isLoading ? 'Guardando...' : task ? 'Actualizar Tarea' : 'Crear Tarea'}
         </button>
       </div>
     </form>

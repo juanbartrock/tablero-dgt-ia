@@ -10,27 +10,38 @@ import TaskManager from './components/tasks/TaskManager';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Task } from './lib/types';
-import { taskApiClient } from './lib/api-client';
 import { TaskCountsType } from './lib/db';
 import ProtectedRoute from './lib/auth/protected-route';
 import { useAuth } from './lib/auth/auth-context';
 import AlertNotification from './components/AlertNotification';
 import NotificationHistory from './components/NotificationHistory';
 
+// Helper para llamadas fetch (opcional pero útil)
+async function fetchData<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    // Podríamos intentar leer el mensaje de error de la respuesta JSON
+    let errorMsg = `HTTP error! status: ${response.status}`;
+    try {
+      const errorBody = await response.json();
+      errorMsg = errorBody.message || errorMsg;
+    } catch (e) { /* Ignorar si el cuerpo no es JSON */ }
+    throw new Error(errorMsg);
+  }
+  return response.json();
+}
+
 export default function Home() {
   const { user, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [activeTasks, setActiveTasks] = useState<Task[]>([]);
-  const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
-  const [inProgressTasks, setInProgressTasks] = useState<Task[]>([]);
-  const [blockedTasks, setBlockedTasks] = useState<Task[]>([]);
-  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [highlightedTasks, setHighlightedTasks] = useState<Task[]>([]);
   const [taskCounts, setTaskCounts] = useState<TaskCountsType>({ 'Pendiente': 0, 'En Progreso': 0, 'Bloqueada': 0, 'Terminada': 0 });
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [activeTab, setActiveTab] = useState('task-manager');
   const [isScrolling, setIsScrolling] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [fetchError, setFetchError] = useState<string | null>(null);
   
   // Estados para el modal de cambio de contraseña
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -49,55 +60,59 @@ export default function Home() {
   // Referencia al contenedor de pestañas
   const tabsSectionRef = useRef<HTMLDivElement>(null);
   
-  // Cargar datos
+  // Cargar datos usando fetch
   const loadData = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    setFetchError(null);
+    
     try {
-      setIsLoading(true);
+      const [ 
+        activeData, 
+        allData, 
+        countsData, 
+        highlightedData, 
+        lastUpdateData 
+      ] = await Promise.all([
+        fetchData<{ tasks: Task[] }>('/api/tasks/active'),
+        fetchData<{ tasks: Task[] }>('/api/tasks'),
+        fetchData<{ counts: TaskCountsType }>('/api/tasks/counts'),
+        fetchData<{ tasks: Task[] }>('/api/tasks/highlighted'),
+        fetchData<{ lastUpdate: string }>('/api/tasks/last-update')
+      ]);
+
+      setActiveTasks(activeData.tasks || []);
+      setAllTasks(allData.tasks || []);
+      setTaskCounts(countsData.counts || { 'Pendiente': 0, 'En Progreso': 0, 'Bloqueada': 0, 'Terminada': 0 });
+      setHighlightedTasks(highlightedData.tasks || []);
+      setLastUpdate(lastUpdateData.lastUpdate || new Date().toISOString());
       
-      // Cargar todos los datos
-      const active = await taskApiClient.getActiveTasks();
-      setActiveTasks(active);
-      
-      const pending = await taskApiClient.getPendingTasks();
-      setPendingTasks(pending);
-      
-      const inProgress = await taskApiClient.getTasksInProgress();
-      setInProgressTasks(inProgress);
-      
-      const blocked = await taskApiClient.getBlockedTasks();
-      setBlockedTasks(blocked);
-      
-      const completed = await taskApiClient.getCompletedTasks();
-      setCompletedTasks(completed);
-      
-      const all = await taskApiClient.getAllTasks();
-      setAllTasks(all);
-      
-      const counts = await taskApiClient.getTaskCountByStatus();
-      setTaskCounts(counts);
-      
-      // Cargar tareas destacadas
-      const highlighted = await taskApiClient.getHighlightedTasks();
-      setHighlightedTasks(highlighted);
-      
-      // Cargar la fecha de última actualización
-      const lastUpdateDate = await taskApiClient.getLastUpdateDate();
-      setLastUpdate(lastUpdateDate);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al cargar los datos:', error);
+      setFetchError(error.message || 'Ocurrió un error al cargar los datos.');
     } finally {
       setIsLoading(false);
     }
   };
   
   useEffect(() => {
-    loadData();
-    
-    // Configurar una actualización periódica cada 5 minutos
-    const intervalId = setInterval(loadData, 5 * 60 * 1000);
-    
-    return () => clearInterval(intervalId);
-  }, []);
+    if (user) {
+      loadData();
+      
+      const intervalId = setInterval(loadData, 5 * 60 * 1000);
+      
+      return () => clearInterval(intervalId);
+    } else {
+      setActiveTasks([]);
+      setAllTasks([]);
+      setTaskCounts({ 'Pendiente': 0, 'En Progreso': 0, 'Bloqueada': 0, 'Terminada': 0 });
+      setHighlightedTasks([]);
+      setLastUpdate('');
+      setIsLoading(false);
+      setFetchError(null);
+    }
+  }, [user]);
   
   // Datos para el gráfico de estado
   const statusData = [
@@ -106,14 +121,14 @@ export default function Home() {
     { name: 'Bloqueada', value: taskCounts['Bloqueada'] }
   ];
   
-  // Obtener tareas próximas (ordenadas por fecha)
-  const upcomingTasks = [...activeTasks]
-    .filter(task => task.importantDate)
+  // Obtener tareas próximas (ahora usa allTasks y filtra)
+  const upcomingTasks = allTasks
+    .filter(task => task.status !== 'Terminada' && task.importantDate)
     .sort((a, b) => {
       if (!a.importantDate || !b.importantDate) return 0;
       return a.importantDate.localeCompare(b.importantDate);
     })
-    .slice(0, 5);  // Mostrar solo las 5 primeras
+    .slice(0, 5);
   
   // Navegar a una sección específica mediante hash
   const navigateToSection = (tabId: string) => {
@@ -121,17 +136,13 @@ export default function Home() {
     
     setIsScrolling(true);
     
-    // Ajustar la URL con hash para navegación
     window.location.hash = tabId;
     
-    // Destacar visualmente la sección de pestañas
     setTimeout(() => {
       const tabsSection = document.getElementById('tabs-section');
       if (tabsSection) {
-        // Aplicar destacado visual
         tabsSection.classList.add('highlight-section');
         
-        // Quitar el destacado después de un momento
         setTimeout(() => {
           tabsSection.classList.remove('highlight-section');
           setIsScrolling(false);
@@ -154,13 +165,11 @@ export default function Home() {
     setPasswordError(null);
     setPasswordSuccess(null);
 
-    // Verificar que el usuario esté autenticado
     if (!user) {
       setPasswordError('No hay sesión activa. Por favor, inicie sesión nuevamente.');
       return;
     }
 
-    // Validaciones
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPasswordError('Todos los campos son obligatorios');
       return;
@@ -198,12 +207,10 @@ export default function Home() {
       }
 
       setPasswordSuccess('Contraseña actualizada correctamente');
-      // Limpiar campos
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       
-      // Cerrar el modal después de 2 segundos
       setTimeout(() => {
         setShowPasswordModal(false);
         setPasswordSuccess(null);
@@ -218,11 +225,12 @@ export default function Home() {
   };
   
   // Función para guardar notificación
-  const handleSaveNotification = () => {
+  const handleSaveNotification = async () => {
     if (!newNotification.trim() || !user) return;
     
+    console.warn('TODO: Implementar API para guardar notificaciones en DB');
+    
     try {
-      // Crear notificación con toda la información necesaria
       const notification = {
         message: newNotification,
         timestamp: Date.now(),
@@ -233,103 +241,30 @@ export default function Home() {
         status: 'active',
         viewCount: 0
       };
-      
-      console.log('Guardando notificación:', notification);
-      
-      // Guardar en localStorage principal (notificación activa)
+      console.log('Guardando notificación (localStorage - temporal):', notification);
       localStorage.setItem('important_notification', JSON.stringify(notification));
       
-      // Registrar en el historial de notificaciones creadas
-      let createdNotifications = [];
-      try {
-        const storedNotifications = localStorage.getItem('created_notifications');
-        if (storedNotifications) {
-          createdNotifications = JSON.parse(storedNotifications);
-        }
-      } catch (error) {
-        console.error('Error al cargar historial de notificaciones creadas:', error);
-      }
-        
-      // Agregar a la lista y guardar
-      createdNotifications.push(notification);
-      localStorage.setItem('created_notifications', JSON.stringify(createdNotifications));
-      
-      console.log('Notificación registrada en historial. Total:', createdNotifications.length);
-      
-      // Notificar al usuario y cerrar el formulario
-      setNewNotification('');
       setShowNotificationForm(false);
-      setNotificationSuccess('Notificación creada correctamente');
-      
-      // Limpiar el mensaje de éxito después de 2 segundos
-      setTimeout(() => setNotificationSuccess(null), 2000);
-      
-      // Forzar recarga para que se muestre la notificación
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      setNewNotification('');
+      setNotificationSuccess('Notificación (temporal) guardada localmente.');
+      setTimeout(() => setNotificationSuccess(null), 3000);
     } catch (error) {
-      console.error('Error al crear notificación:', error);
-      alert('Ocurrió un error al crear la notificación. Por favor, intente nuevamente.');
+      console.error('Error guardando notificación (localStorage):', error);
     }
   };
   
-  // Crear una función para marcar notificaciones como eliminadas
-  const handleDeleteNotification = () => {
-    if (!user) return;
-    
-    try {
-      // Obtener la notificación activa
-      const storedNotification = localStorage.getItem('important_notification');
-      if (!storedNotification) {
-        console.log('No hay notificación activa para eliminar');
-        return;
-      }
-      
-      const notification = JSON.parse(storedNotification);
-      console.log('Notificación a eliminar:', notification);
-      
-      // Registrar la eliminación
-      let deletedNotifications = [];
-      const deletedData = localStorage.getItem('deleted_notifications');
-      if (deletedData) {
-        deletedNotifications = JSON.parse(deletedData);
-      }
-      
-      // Crear registro de eliminación
-      const deleteRecord = {
-        notificationId: notification.timestamp,
-        notificationMessage: notification.message,
-        deletedBy: user.username,
-        deletedByName: user.name,
-        deletedById: user.id,
-        deletedAt: new Date().toISOString(),
-        originalCreatedBy: notification.createdBy,
-        originalCreatedAt: notification.createdAt
-      };
-      
-      // Agregar al historial
-      deletedNotifications.push(deleteRecord);
-      localStorage.setItem('deleted_notifications', JSON.stringify(deletedNotifications));
-      
-      // Eliminar notificación activa
-      localStorage.removeItem('important_notification');
-      
-      console.log('Notificación marcada como eliminada/cumplida');
-      
-      // Recargar la página
-      setTimeout(() => window.location.reload(), 300);
-    } catch (error) {
-      console.error('Error al eliminar notificación:', error);
-    }
+  // Callback para actualizar datos después de cambios en TaskManager
+  const handleTasksUpdated = () => {
+    console.log('TaskManager updated tasks, reloading data...');
+    loadData();
   };
-  
+
   // Contenido de las pestañas
   const tabsContent = [
     {
       id: 'task-manager',
       label: 'Gestión de Tareas',
-      content: <TaskManager />
+      content: <TaskManager initialTasks={allTasks} onTasksUpdated={handleTasksUpdated} />
     },
     {
       id: 'pending',
@@ -338,10 +273,10 @@ export default function Home() {
         <div className="text-center p-4">Cargando tareas pendientes...</div>
       ) : (
         <div className="bg-white p-4 rounded shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Tareas Pendientes ({pendingTasks.length})</h3>
-          {pendingTasks.length > 0 ? (
+          <h3 className="text-lg font-semibold mb-4">Tareas Pendientes ({activeTasks.length})</h3>
+          {activeTasks.length > 0 ? (
             <ul className="list-disc pl-4">
-              {pendingTasks.map(task => (
+              {activeTasks.map(task => (
                 <li key={String(task.id)} className="mb-2">
                   <span className="font-medium">{task.description}</span>
                   <div className="text-sm text-gray-500">
@@ -366,10 +301,10 @@ export default function Home() {
         <div className="text-center p-4">Cargando tareas en progreso...</div>
       ) : (
         <div className="bg-white p-4 rounded shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Tareas En Progreso ({inProgressTasks.length})</h3>
-          {inProgressTasks.length > 0 ? (
+          <h3 className="text-lg font-semibold mb-4">Tareas En Progreso ({activeTasks.length})</h3>
+          {activeTasks.length > 0 ? (
             <ul className="list-disc pl-4">
-              {inProgressTasks.map(task => (
+              {activeTasks.map(task => (
                 <li key={String(task.id)} className="mb-2">
                   <span className="font-medium">{task.description}</span>
                   <div className="text-sm text-gray-500">
@@ -394,10 +329,10 @@ export default function Home() {
         <div className="text-center p-4">Cargando tareas detenidas...</div>
       ) : (
         <div className="bg-white p-4 rounded shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Tareas Detenidas ({blockedTasks.length})</h3>
-          {blockedTasks.length > 0 ? (
+          <h3 className="text-lg font-semibold mb-4">Tareas Detenidas ({activeTasks.length})</h3>
+          {activeTasks.length > 0 ? (
             <ul className="list-disc pl-4">
-              {blockedTasks.map(task => (
+              {activeTasks.map(task => (
                 <li key={String(task.id)} className="mb-2">
                   <span className="font-medium">{task.description}</span>
                   <div className="text-sm text-gray-500">
@@ -422,10 +357,10 @@ export default function Home() {
         <div className="text-center p-4">Cargando tareas terminadas...</div>
       ) : (
         <div className="bg-white p-4 rounded shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Tareas Terminadas ({completedTasks.length})</h3>
-          {completedTasks.length > 0 ? (
+          <h3 className="text-lg font-semibold mb-4">Tareas Terminadas ({activeTasks.length})</h3>
+          {activeTasks.length > 0 ? (
             <ul className="list-disc pl-4">
-              {completedTasks.map(task => (
+              {activeTasks.map(task => (
                 <li key={String(task.id)} className="mb-2">
                   <span className="font-medium">{task.description}</span>
                   <div className="text-sm text-gray-500">

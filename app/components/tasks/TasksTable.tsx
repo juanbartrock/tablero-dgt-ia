@@ -7,9 +7,10 @@ interface TasksTableProps {
   tasks: Task[];
   onEdit?: (task: Task) => void;
   onDelete?: (taskId: string | number) => void;
+  isLoading: boolean;
 }
 
-export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps) {
+export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: TasksTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const tasksPerPage = 10;
 
@@ -77,7 +78,7 @@ export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps)
   };
 
   return (
-    <div className="mt-6">
+    <div className={`mt-6 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="overflow-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -97,10 +98,16 @@ export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps)
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {currentTasks.length === 0 ? (
+            {currentTasks.length === 0 && !isLoading ? (
               <tr>
                 <td colSpan={onEdit || onDelete ? 10 : 9} className="px-6 py-4 text-center text-sm text-gray-500">
                   No hay tareas para mostrar.
+                </td>
+              </tr>
+            ) : isLoading ? (
+              <tr>
+                <td colSpan={onEdit || onDelete ? 10 : 9} className="px-6 py-4 text-center text-sm text-gray-500">
+                  Cargando...
                 </td>
               </tr>
             ) : (
@@ -157,7 +164,8 @@ export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps)
                       {onEdit && (
                         <button
                           onClick={() => onEdit(task)}
-                          className="text-indigo-600 hover:text-indigo-900 mr-3"
+                          disabled={isLoading}
+                          className="text-indigo-600 hover:text-indigo-900 mr-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Editar
                         </button>
@@ -165,7 +173,8 @@ export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps)
                       {onDelete && (
                         <button
                           onClick={() => onDelete(task.id)}
-                          className="text-red-600 hover:text-red-900"
+                          disabled={isLoading}
+                          className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Eliminar
                         </button>
@@ -181,14 +190,14 @@ export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps)
       
       {/* Paginación */}
       {totalPages > 1 && (
-        <div className="mt-4 flex justify-between items-center">
+        <div className={`mt-4 flex justify-between items-center ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
           <div className="text-sm text-gray-700">
             Mostrando {indexOfFirstTask + 1}-{Math.min(indexOfLastTask, sortedTasks.length)} de {sortedTasks.length} tareas
           </div>
           <div className="flex space-x-1">
             <button
               onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
-              disabled={currentPage === 1}
+              disabled={currentPage === 1 || isLoading}
               className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 disabled:opacity-50"
             >
               Anterior
@@ -205,11 +214,12 @@ export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps)
                   <button
                     key={pageNumber}
                     onClick={() => paginate(pageNumber)}
+                    disabled={isLoading}
                     className={`px-3 py-1 rounded-md text-sm ${
                       currentPage === pageNumber
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    } disabled:opacity-50`}
                   >
                     {pageNumber}
                   </button>
@@ -226,7 +236,7 @@ export default function TasksTable({ tasks, onEdit, onDelete }: TasksTableProps)
             })}
             <button
               onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || isLoading}
               className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 disabled:opacity-50"
             >
               Siguiente
