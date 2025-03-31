@@ -9,6 +9,9 @@ export async function GET(request: NextRequest) {
     console.log('📥 API GET /api/tasks - Consultando todas las tareas...');
     const tasks = await getAllTasks();
     console.log(`📥 API GET /api/tasks - Se encontraron ${tasks.length} tareas`);
+    console.log('📥 API GET /api/tasks - IDs de tareas:', tasks.map(t => t.id).join(', '));
+    console.log('📥 API GET /api/tasks - Estados:', tasks.map(t => `${t.id}:${t.status}`).join(', '));
+    console.log('📥 API GET /api/tasks - Destacadas:', tasks.map(t => `${t.id}:${t.highlighted}`).join(', '));
     
     // Configurar cabeceras para evitar caché
     const headers = new Headers();

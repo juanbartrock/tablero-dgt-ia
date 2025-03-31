@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Tabs from './components/Tabs';
-import KPICard from './components/dashboard/KPICard';
+import DirectKPI from './components/dashboard/DirectKPI';
 import StatusChart from './components/dashboard/StatusChart';
 import UpcomingTasksList from './components/dashboard/UpcomingTasksList';
-import HighlightedTasksList from './components/dashboard/HighlightedTasksList';
+import DirectHighlighted from './components/dashboard/DirectHighlighted';
 import TaskManager from './components/tasks/TaskManager';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -89,15 +89,38 @@ export default function Home() {
 
       console.log('🔄 Home - loadData: Peticiones completadas, actualizando estados...');
       console.log('📊 Tareas totales recibidas:', allData.tasks?.length || 0);
+      console.log('📊 Tareas por id:', allData.tasks?.map(t => t.id).join(', '));
       console.log('📊 Tareas activas recibidas:', activeData.tasks?.length || 0);
       console.log('📊 Tareas destacadas recibidas:', highlightedData.tasks?.length || 0);
+      console.log('📊 Destacadas IDs:', highlightedData.tasks?.map(t => t.id).join(', '));
       console.log('📊 Conteos por estado:', JSON.stringify(countsData.counts));
+      
+      // Calcular conteos de forma directa desde allData
+      const pendienteCount = allData.tasks?.filter(t => t.status === 'Pendiente').length || 0;
+      const progresoCount = allData.tasks?.filter(t => t.status === 'En Progreso').length || 0;
+      const bloqueadaCount = allData.tasks?.filter(t => t.status === 'Bloqueada').length || 0;
+      const terminadaCount = allData.tasks?.filter(t => t.status === 'Terminada').length || 0;
+      
+      console.log('📊 Conteos calculados directamente:');
+      console.log('   - Pendiente:', pendienteCount);
+      console.log('   - En Progreso:', progresoCount);
+      console.log('   - Bloqueada:', bloqueadaCount);
+      console.log('   - Terminada:', terminadaCount);
+      
+      // Tareas destacadas calculadas de forma directa
+      const destacadasCalculadas = allData.tasks?.filter(t => t.highlighted).length || 0;
+      console.log('📊 Tareas destacadas calculadas directamente:', destacadasCalculadas);
       
       // Actualizar estados en secuencia para asegurar re-renders
       setActiveTasks(activeData.tasks || []);
       setAllTasks(allData.tasks || []);
-      setTaskCounts(countsData.counts || { 'Pendiente': 0, 'En Progreso': 0, 'Bloqueada': 0, 'Terminada': 0 });
-      setHighlightedTasks(highlightedData.tasks || []);
+      setTaskCounts({
+        'Pendiente': pendienteCount,
+        'En Progreso': progresoCount,
+        'Bloqueada': bloqueadaCount,
+        'Terminada': terminadaCount
+      });
+      setHighlightedTasks(allData.tasks?.filter(t => t.highlighted) || []);
       setLastUpdate(lastUpdateData.lastUpdate || new Date().toISOString());
       console.log('✅ Home - loadData: Estados actualizados correctamente');
       
@@ -488,27 +511,27 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-1">
               <div className="grid grid-cols-2 gap-3 h-full">
-                <KPICard 
+                <DirectKPI 
                   title="Total" 
                   value={allTasks.length} 
                   color="success" 
                   onClick={() => navigateToSection('task-manager')} 
                 />
-                <KPICard 
+                <DirectKPI 
                   title="Pendientes" 
-                  value={taskCounts['Pendiente']} 
+                  value={allTasks.filter(task => task.status === 'Pendiente').length} 
                   color="warning" 
                   onClick={() => navigateToSection('pending')} 
                 />
-                <KPICard 
+                <DirectKPI 
                   title="En Progreso" 
-                  value={taskCounts['En Progreso']} 
+                  value={allTasks.filter(task => task.status === 'En Progreso').length} 
                   color="info" 
                   onClick={() => navigateToSection('in-progress')} 
                 />
-                <KPICard 
+                <DirectKPI 
                   title="Detenida" 
-                  value={taskCounts['Bloqueada']} 
+                  value={allTasks.filter(task => task.status === 'Bloqueada').length} 
                   color="error" 
                   onClick={() => navigateToSection('blocked')} 
                 />
@@ -516,7 +539,9 @@ export default function Home() {
             </div>
             
             <div className="lg:col-span-2">
-              <HighlightedTasksList tasks={highlightedTasks} />
+              <DirectHighlighted 
+                tasks={allTasks.filter(task => task.highlighted)} 
+              />
             </div>
           </div>
           

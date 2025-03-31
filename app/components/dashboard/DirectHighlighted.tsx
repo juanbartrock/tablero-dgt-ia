@@ -9,6 +9,9 @@ interface DirectHighlightedProps {
 export default function DirectHighlighted({ tasks }: DirectHighlightedProps) {
   // Componente muy directo, duro y simple
   console.log('DirectHighlighted rendering with tasks:', tasks);
+  console.log('DirectHighlighted - IDs de tareas destacadas:', tasks?.map(t => t.id).join(', '));
+  console.log('DirectHighlighted - Número de tareas destacadas:', tasks?.length || 0);
+  console.log('DirectHighlighted - Propiedad highlighted en tareas:', tasks?.map(t => `${t.id}:${t.highlighted}`).join(', '));
   
   // Función para manejar los colores de los estados
   const getStatusColor = (status: string): string => {
