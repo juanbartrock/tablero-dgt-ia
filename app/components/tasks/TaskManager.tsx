@@ -15,6 +15,7 @@ interface TaskManagerProps {
 
 export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManagerProps) {
   const { user } = useAuth();
+  console.log('TaskManager - Received initialTasks:', initialTasks); // Log al recibir props
   // Inicializar el estado con las props
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>(initialTasks);
@@ -32,11 +33,10 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
 
   // Efecto para actualizar el estado interno si las props iniciales cambian
   useEffect(() => {
+    console.log('TaskManager - useEffect updating tasks from initialTasks:', initialTasks); // Log en useEffect
     setTasks(initialTasks);
-    // Volver a aplicar el filtro actual cuando las tareas iniciales cambian
-    // Esto asegura que el filtro se mantenga después de una recarga de datos
     filterTasks(searchTerm, searchField, initialTasks);
-  }, [initialTasks]); // Depender de initialTasks
+  }, [initialTasks]);
 
   // Función de filtrado reutilizable
   const filterTasks = (term: string, field: string, currentTasks: Task[]) => {
@@ -69,6 +69,7 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
               return true;
           }
       });
+      console.log('TaskManager - Setting filteredTasks:', filtered); // Log después de filtrar
       setFilteredTasks(filtered);
   };
 

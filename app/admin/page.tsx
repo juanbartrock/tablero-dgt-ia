@@ -925,10 +925,20 @@ export default function AdminPage() {
                       Error al cargar tareas: {adminTasksError}
                    </div>
               )}
-              <TaskManager 
-                  initialTasks={adminTasks} 
-                  onTasksUpdated={loadAdminTasks} 
-              />
+              {/* Mostrar carga o TaskManager */} 
+              {isAdminTasksLoading ? (
+                  <div className="text-center p-4">
+                      <p className="text-gray-500">Cargando tareas...</p>
+                  </div>
+              ) : adminTasksError ? null : ( // No mostrar TaskManager si hubo error
+                  <> {/* Log ya no es necesario aquí si controlamos carga */} 
+                      {/* {(() => { console.log('AdminPage - Rendering TaskManager with initialTasks:', adminTasks); return null; })()} */}
+                      <TaskManager 
+                          initialTasks={adminTasks} 
+                          onTasksUpdated={loadAdminTasks} 
+                      />
+                  </>
+              )}
             </div>
           )}
 

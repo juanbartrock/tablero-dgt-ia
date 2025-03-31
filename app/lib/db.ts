@@ -237,10 +237,16 @@ export async function getTaskCounts(): Promise<TaskCountsType> {
   }
 }
 
-// Obtener tareas destacadas
+// Obtener tareas destacadas (modificada para usar SQL)
 export async function getHighlightedTasks(): Promise<Task[]> {
-  const tasks = await getAllTasks();
-  return tasks.filter(task => task.highlighted === true);
+   try {
+    // Seleccionar solo las tareas donde highlighted = true
+    const result = await query("SELECT * FROM tasks WHERE highlighted = TRUE ORDER BY created_at DESC");
+    return result.rows.map(mapRowToTask);
+  } catch (error) {
+    console.error('Error fetching highlighted tasks:', error);
+    throw error; // O devolver []
+  }
 }
 
 // Eliminar todas las tareas
