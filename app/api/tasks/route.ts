@@ -4,8 +4,11 @@ import { Task } from '@/app/lib/types'; // Importar el tipo Task si es necesario
 
 // GET - Obtener todas las tareas
 export async function GET(request: NextRequest) {
+  console.log('API GET /api/tasks - Handler invoked'); // Log inicial
   try {
+    console.log('API GET /api/tasks - Calling getAllTasks()...'); // Log antes de llamar
     const tasks = await getAllTasks();
+    console.log('API GET /api/tasks - getAllTasks() returned:', tasks); // Log del resultado
     return NextResponse.json({ tasks });
   } catch (error) {
     console.error('Error fetching tasks:', error);
