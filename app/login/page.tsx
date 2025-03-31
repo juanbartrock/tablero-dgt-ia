@@ -41,8 +41,6 @@ export default function LoginPage() {
 
   return (
     <>
-      <h1 className="text-center text-3xl font-bold text-primary my-8">DGT - Área Inteligencia Artificial</h1>
-      
       <div className="max-w-sm mx-auto bg-white rounded-lg shadow-md p-6">
         <div className="text-center mb-6">
           <Image 
