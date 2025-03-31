@@ -514,40 +514,46 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-1">
-              <div className="grid grid-cols-2 gap-3 h-full">
-                <DirectKPI 
-                  title="Total" 
-                  value={pendingTasks.length + inProgressTasks.length + blockedTasks.length} 
-                  color="success" 
-                  onClick={() => navigateToSection('task-manager')} 
-                />
-                <DirectKPI 
-                  title="Pendientes" 
-                  value={pendingTasks.length} 
-                  color="warning" 
-                  onClick={() => navigateToSection('pending')} 
-                />
-                <DirectKPI 
-                  title="En Progreso" 
-                  value={inProgressTasks.length} 
-                  color="info" 
-                  onClick={() => navigateToSection('in-progress')} 
-                />
-                <DirectKPI 
-                  title="Detenida" 
-                  value={blockedTasks.length} 
-                  color="error" 
-                  onClick={() => navigateToSection('blocked')} 
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+              <span className="mr-2">📊</span> Panel de Control
+            </h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <div className="grid grid-cols-2 gap-4 h-full">
+                  <DirectKPI 
+                    title="Total" 
+                    value={pendingTasks.length + inProgressTasks.length + blockedTasks.length} 
+                    color="success" 
+                    onClick={() => navigateToSection('task-manager')} 
+                  />
+                  <DirectKPI 
+                    title="Pendientes" 
+                    value={pendingTasks.length} 
+                    color="warning" 
+                    onClick={() => navigateToSection('pending')} 
+                  />
+                  <DirectKPI 
+                    title="En Progreso" 
+                    value={inProgressTasks.length} 
+                    color="info" 
+                    onClick={() => navigateToSection('in-progress')} 
+                  />
+                  <DirectKPI 
+                    title="Detenida" 
+                    value={blockedTasks.length} 
+                    color="error" 
+                    onClick={() => navigateToSection('blocked')} 
+                  />
+                </div>
+              </div>
+              
+              <div className="lg:col-span-2">
+                <DirectHighlighted 
+                  tasks={allTasks.filter(task => task.highlighted)} 
                 />
               </div>
-            </div>
-            
-            <div className="lg:col-span-2">
-              <DirectHighlighted 
-                tasks={allTasks.filter(task => task.highlighted)} 
-              />
             </div>
           </div>
           
