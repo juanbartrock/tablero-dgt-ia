@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getImportantNotification, setImportantNotification, clearImportantNotification } from '../lib/notification';
+import { getImportantNotification, setImportantNotification, clearImportantNotification, getNotificationHistory, Notification } from '../lib/notification';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '../lib/auth/protected-route';
 import { useAuth } from '../lib/auth/auth-context';
@@ -321,70 +321,70 @@ export default function AdminPage() {
     setUserForm({ username: '', name: '', password: '' });
   };
 
-  const loadNotificationData = () => {
+  const loadNotificationData = async () => {
     try {
-      // Cargar historial de notificaciones creadas
-      const history = localStorage.getItem('created_notifications');
-      if (history) {
-        const parsed = JSON.parse(history);
+      // Obtener historial de notificaciones desde la API
+      const notifications = await getNotificationHistory();
+      
+      if (notifications && notifications.length > 0) {
         // Ordenar por fecha (más recientes primero)
-        const sorted = parsed.sort((a: any, b: any) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        const sorted = notifications.sort((a, b) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
-        setNotificationsHistory(sorted);
+        
+        // Convertir al formato esperado por el componente
+        const formattedNotifications = sorted.map(notification => ({
+          message: notification.message,
+          timestamp: new Date(notification.timestamp).getTime(),
+          createdBy: notification.createdByName,
+          createdAt: new Date(notification.timestamp).toISOString(),
+          createdById: notification.createdById,
+          createdByName: notification.createdByName,
+          viewCount: 0 // Por ahora no tenemos esta información
+        }));
+        
+        setNotificationsHistory(formattedNotifications);
+        
+        // Encontrar la notificación activa para mostrarla como actual
+        const activeNotification = sorted.find(n => n.status === 'active');
+        if (activeNotification) {
+          // Convertir al formato esperado
+          setCurrentNotification({
+            message: activeNotification.message,
+            timestamp: new Date(activeNotification.timestamp).getTime(),
+            createdBy: activeNotification.createdByName,
+            createdAt: new Date(activeNotification.timestamp).toISOString(),
+            createdById: activeNotification.createdById,
+            createdByName: activeNotification.createdByName,
+            viewCount: 0 // Por ahora no tenemos esta información
+          });
+        } else {
+          setCurrentNotification(null);
+        }
+      } else {
+        setNotificationsHistory([]);
+        setCurrentNotification(null);
       }
       
-      // Cargar vistas de notificaciones
-      const views = localStorage.getItem('viewed_notifications');
-      if (views) {
-        const parsed = JSON.parse(views);
-        // Ordenar por fecha (más recientes primero)
-        const sorted = parsed.sort((a: any, b: any) => 
-          new Date(b.viewedAt).getTime() - new Date(a.viewedAt).getTime()
-        );
-        setNotificationViews(sorted);
-      }
-      
-      // Cargar notificaciones eliminadas
-      const deleted = localStorage.getItem('deleted_notifications');
-      if (deleted) {
-        setDeletedNotifications(JSON.parse(deleted));
-      }
+      // TODO: Implementar vistas de notificaciones desde la API
+      setNotificationViews([]);
+      setDeletedNotifications([]);
     } catch (error) {
       console.error('Error al cargar datos de notificaciones:', error);
     }
   };
   
-  const handleNotificationSave = () => {
+  const handleNotificationSave = async () => {
     if (!notificationText.trim() || !user) return;
     
     try {
-      // Crear objeto de notificación
-      const notification = {
-        message: notificationText,
-        timestamp: Date.now(),
-        createdBy: user.username,
-        createdAt: new Date().toISOString(),
-        createdById: user.id,
-        createdByName: user.name,
-        viewCount: 0
-      };
+      // Llamar a la API para crear la notificación
+      await setImportantNotification(notificationText);
       
-      // Guardar como notificación actual
-      localStorage.setItem('important_notification', JSON.stringify(notification));
+      // Recargar notificaciones después de crear una nueva
+      loadNotificationData();
       
-      // Agregar al historial
-      let history = [];
-      const existingHistory = localStorage.getItem('created_notifications');
-      if (existingHistory) {
-        history = JSON.parse(existingHistory);
-      }
-      history.push(notification);
-      localStorage.setItem('created_notifications', JSON.stringify(history));
-      
-      // Actualizar estado
-      setCurrentNotification(notification);
-      setNotificationsHistory([notification, ...notificationsHistory]);
+      // Limpiar formulario
       setNotificationText('');
       
       alert('Notificación creada correctamente');

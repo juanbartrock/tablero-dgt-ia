@@ -1,54 +1,125 @@
 'use client';
 
-// Clave para almacenar la notificación en localStorage
-const NOTIFICATION_KEY = 'important_notification';
+// Interfaces
+export interface Notification {
+  id: number;
+  message: string;
+  timestamp: Date;
+  createdById: number;
+  createdByName: string;
+  status: string;
+  hasBeenViewed?: boolean;
+}
 
 // Función para obtener el mensaje de notificación importante
-export async function getImportantNotification(): Promise<string | null> {
-  // Esta función se ejecutará en el servidor durante SSR y en el cliente durante la hidratación
-  // Por lo tanto, necesitamos verificar si estamos en el cliente
-  if (typeof window === 'undefined') {
-    // En el servidor, devolvemos null (o podríamos usar un valor por defecto)
-    return null;
-  }
-  
+export async function getImportantNotification(): Promise<Notification | null> {
   try {
-    const storedNotification = localStorage.getItem(NOTIFICATION_KEY);
-    if (!storedNotification) return null;
+    const response = await fetch('/api/notifications', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
     
-    const notification = JSON.parse(storedNotification);
-    return notification.message || null;
+    if (!response.ok) {
+      console.error('Error al obtener notificación:', response.statusText);
+      return null;
+    }
+    
+    const data = await response.json();
+    return data.notification;
   } catch (error) {
     console.error('Error al obtener la notificación:', error);
     return null;
   }
 }
 
-// Función para establecer una nueva notificación importante
-export async function setImportantNotification(message: string): Promise<void> {
-  if (typeof window === 'undefined') return;
-  
+// Función para establecer una nueva notificación importante (solo para administradores)
+export async function setImportantNotification(message: string): Promise<Notification | null> {
   try {
-    localStorage.setItem(
-      NOTIFICATION_KEY,
-      JSON.stringify({ message, timestamp: new Date().toISOString() })
-    );
-    console.log('Nueva notificación establecida:', message);
+    const response = await fetch('/api/notifications/admin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message }),
+    });
+    
+    if (!response.ok) {
+      console.error('Error al crear notificación:', response.statusText);
+      throw new Error('No se pudo crear la notificación');
+    }
+    
+    const data = await response.json();
+    return data.notification;
   } catch (error) {
     console.error('Error al guardar la notificación:', error);
     throw new Error('No se pudo guardar la notificación');
   }
 }
 
-// Función para borrar la notificación importante
-export async function clearImportantNotification(): Promise<void> {
-  if (typeof window === 'undefined') return;
-  
+// Función para borrar la notificación importante (solo para administradores)
+export async function clearImportantNotification(notificationId: number): Promise<void> {
   try {
-    localStorage.removeItem(NOTIFICATION_KEY);
-    console.log('Notificación importante borrada');
+    const response = await fetch(`/api/notifications/admin?id=${notificationId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      console.error('Error al borrar notificación:', response.statusText);
+      throw new Error('No se pudo borrar la notificación');
+    }
   } catch (error) {
     console.error('Error al borrar la notificación:', error);
     throw new Error('No se pudo borrar la notificación');
+  }
+}
+
+// Función para marcar una notificación como vista
+export async function markNotificationAsViewed(notificationId: number): Promise<void> {
+  try {
+    const response = await fetch('/api/notifications/viewed', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ notificationId }),
+    });
+    
+    if (!response.ok) {
+      console.error('Error al marcar notificación como vista:', response.statusText);
+      throw new Error('No se pudo marcar la notificación como vista');
+    }
+  } catch (error) {
+    console.error('Error al marcar la notificación como vista:', error);
+    throw new Error('No se pudo marcar la notificación como vista');
+  }
+}
+
+// Función para obtener el historial de notificaciones (solo para administradores)
+export async function getNotificationHistory(): Promise<Notification[]> {
+  try {
+    const response = await fetch('/api/notifications/admin', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+    
+    if (!response.ok) {
+      console.error('Error al obtener historial de notificaciones:', response.statusText);
+      return [];
+    }
+    
+    const data = await response.json();
+    return data.notifications || [];
+  } catch (error) {
+    console.error('Error al obtener historial de notificaciones:', error);
+    return [];
   }
 } 

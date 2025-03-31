@@ -15,6 +15,7 @@ import ProtectedRoute from './lib/auth/protected-route';
 import { useAuth } from './lib/auth/auth-context';
 import AlertNotification from './components/AlertNotification';
 import NotificationHistory from './components/NotificationHistory';
+import { setImportantNotification } from '@/app/lib/notification';
 
 // Helper para llamadas fetch (opcional pero útil)
 async function fetchData<T>(url: string): Promise<T> {
@@ -270,28 +271,18 @@ export default function Home() {
   const handleSaveNotification = async () => {
     if (!newNotification.trim() || !user) return;
     
-    console.warn('TODO: Implementar API para guardar notificaciones en DB');
-    
     try {
-      const notification = {
-        message: newNotification,
-        timestamp: Date.now(),
-        createdBy: user.username,
-        createdAt: new Date().toISOString(),
-        createdById: user.id,
-        createdByName: user.name,
-        status: 'active',
-        viewCount: 0
-      };
-      console.log('Guardando notificación (localStorage - temporal):', notification);
-      localStorage.setItem('important_notification', JSON.stringify(notification));
+      // Llamar a la API para crear la notificación
+      await setImportantNotification(newNotification);
       
       setShowNotificationForm(false);
       setNewNotification('');
-      setNotificationSuccess('Notificación (temporal) guardada localmente.');
+      setNotificationSuccess('Notificación guardada correctamente');
       setTimeout(() => setNotificationSuccess(null), 3000);
     } catch (error) {
-      console.error('Error guardando notificación (localStorage):', error);
+      console.error('Error guardando notificación:', error);
+      setNotificationSuccess('Error al guardar la notificación');
+      setTimeout(() => setNotificationSuccess(null), 3000);
     }
   };
   
