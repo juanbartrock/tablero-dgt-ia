@@ -13,7 +13,20 @@ export async function GET(request: NextRequest) {
       console.log('📊 Primera tarea destacada:', tasks[0]);
     }
     
-    return NextResponse.json({ tasks });
+    // Configurar cabeceras para evitar caché
+    const headers = new Headers();
+    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    headers.set('Pragma', 'no-cache');
+    headers.set('Expires', '0');
+    headers.set('Surrogate-Control', 'no-store');
+    
+    return new NextResponse(
+      JSON.stringify({ tasks }),
+      { 
+        status: 200,
+        headers: headers
+      }
+    );
   } catch (error) {
     console.error('❌ Error obteniendo tareas destacadas:', error);
     return NextResponse.json(

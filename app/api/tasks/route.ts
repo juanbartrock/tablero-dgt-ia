@@ -6,12 +6,26 @@ import { Task } from '@/app/lib/types'; // Importar el tipo Task si es necesario
 export async function GET(request: NextRequest) {
   console.log('📥 API GET /api/tasks - Handler invocado');
   try {
-    console.log('📥 API GET /api/tasks - Llamando a getAllTasks()...');
+    console.log('📥 API GET /api/tasks - Consultando todas las tareas...');
     const tasks = await getAllTasks();
-    console.log(`📥 API GET /api/tasks - getAllTasks() devolvió ${tasks.length} tareas`);
-    return NextResponse.json({ tasks });
+    console.log(`📥 API GET /api/tasks - Se encontraron ${tasks.length} tareas`);
+    
+    // Configurar cabeceras para evitar caché
+    const headers = new Headers();
+    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    headers.set('Pragma', 'no-cache');
+    headers.set('Expires', '0');
+    headers.set('Surrogate-Control', 'no-store');
+    
+    return new NextResponse(
+      JSON.stringify({ tasks }),
+      { 
+        status: 200,
+        headers: headers
+      }
+    );
   } catch (error) {
-    console.error('❌ Error obteniendo tareas:', error);
+    console.error('Error getting all tasks:', error);
     return NextResponse.json(
       { message: 'Error interno del servidor al obtener tareas' },
       { status: 500 }

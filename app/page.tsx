@@ -61,7 +61,7 @@ export default function Home() {
   const tabsSectionRef = useRef<HTMLDivElement>(null);
   
   // Cargar datos usando fetch
-  const loadData = async () => {
+  const loadData = async (forceCacheBypass = false) => {
     if (!user) return;
     
     console.log('🔄 Home - loadData: Iniciando carga de datos...');
@@ -69,7 +69,10 @@ export default function Home() {
     setFetchError(null);
     
     try {
-      console.log('🔄 Home - loadData: Realizando peticiones a la API...');
+      // Añadir timestamp en la URL para evitar caché si se solicita
+      const timestamp = forceCacheBypass ? `?t=${new Date().getTime()}` : '';
+      
+      console.log(`🔄 Home - loadData: Realizando peticiones a la API${forceCacheBypass ? ' (bypass caché)' : ''}...`);
       const [ 
         activeData, 
         allData, 
@@ -77,11 +80,11 @@ export default function Home() {
         highlightedData, 
         lastUpdateData 
       ] = await Promise.all([
-        fetchData<{ tasks: Task[] }>('/api/tasks/active'),
-        fetchData<{ tasks: Task[] }>('/api/tasks'),
-        fetchData<{ counts: TaskCountsType }>('/api/tasks/counts'),
-        fetchData<{ tasks: Task[] }>('/api/tasks/highlighted'),
-        fetchData<{ lastUpdate: string }>('/api/tasks/last-update')
+        fetchData<{ tasks: Task[] }>(`/api/tasks/active${timestamp}`),
+        fetchData<{ tasks: Task[] }>(`/api/tasks${timestamp}`),
+        fetchData<{ counts: TaskCountsType }>(`/api/tasks/counts${timestamp}`),
+        fetchData<{ tasks: Task[] }>(`/api/tasks/highlighted${timestamp}`),
+        fetchData<{ lastUpdate: string }>(`/api/tasks/last-update${timestamp}`)
       ]);
 
       console.log('🔄 Home - loadData: Peticiones completadas, actualizando estados...');
@@ -90,6 +93,7 @@ export default function Home() {
       console.log('📊 Tareas destacadas recibidas:', highlightedData.tasks?.length || 0);
       console.log('📊 Conteos por estado:', JSON.stringify(countsData.counts));
       
+      // Actualizar estados en secuencia para asegurar re-renders
       setActiveTasks(activeData.tasks || []);
       setAllTasks(allData.tasks || []);
       setTaskCounts(countsData.counts || { 'Pendiente': 0, 'En Progreso': 0, 'Bloqueada': 0, 'Terminada': 0 });
@@ -265,7 +269,33 @@ export default function Home() {
   // Callback para actualizar datos después de cambios en TaskManager
   const handleTasksUpdated = () => {
     console.log('🔄 Home - handleTasksUpdated: TaskManager actualizó tareas, recargando todos los datos...');
-    loadData(); // Recarga todos los datos
+    
+    // Forzar estado de carga para actualizar la UI
+    setIsLoading(true);
+    
+    // Usar Promise para asegurar que todas las llamadas a la API se completen
+    // Establecer un pequeño retraso para asegurar que la BD esté actualizada
+    setTimeout(async () => {
+      try {
+        // Recargar todos los datos forzando bypass de caché
+        console.log('🔄 Home - handleTasksUpdated: Ejecutando recarga de datos con anti-caché...');
+        
+        // Usar la función loadData con bypass de caché
+        await loadData(true);
+        
+        // Hacemos un segundo intento después de un pequeño retraso
+        // para asegurar que todos los datos se han actualizado correctamente
+        setTimeout(async () => {
+          console.log('🔄 Home - handleTasksUpdated: Ejecutando segunda recarga por seguridad...');
+          await loadData(true);
+        }, 1000);
+        
+      } catch (error: any) {
+        console.error('❌ Home - handleTasksUpdated: Error al recargar los datos:', error);
+        setFetchError('Error al actualizar los datos después de modificar tareas');
+        setIsLoading(false);
+      }
+    }, 300); // Pequeño retraso para dar tiempo a que la BD se actualice completamente
   };
 
   // Contenido de las pestañas

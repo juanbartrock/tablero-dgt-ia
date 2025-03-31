@@ -3,8 +3,8 @@ import { importTasksFromGoogleSheets } from '@/app/lib/google-sheets-client';
 import { createTask } from '@/app/lib/db';
 
 // POST - Importar tareas desde Google Sheets
-export async function GET(request: NextRequest) {
-  console.log('📥 API GET /api/tasks/import-google-sheets - Handler invocado');
+export async function POST(request: NextRequest) {
+  console.log('📥 API POST /api/tasks/import-google-sheets - Handler invocado');
   
   try {
     // Importar tareas desde Google Sheets

@@ -93,6 +93,10 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
         console.log('🗑️ TaskManager - handleDelete: Eliminando tarea con ID:', taskId);
         const response = await fetch(`/api/tasks/${taskId}`, {
           method: 'DELETE',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
         const data = await response.json(); // Leer respuesta para mensaje
 
@@ -104,7 +108,11 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
         
         // Llamar al callback para que el padre recargue todos los datos
         console.log('🔄 TaskManager - handleDelete: Llamando a onTasksUpdated para actualizar UI...');
-        onTasksUpdated();
+        
+        // Esperar un momento para que la BD se actualice
+        setTimeout(() => {
+          onTasksUpdated();
+        }, 300);
 
       } catch (err: any) {
         console.error('❌ TaskManager - handleDelete: Error al eliminar la tarea:', err);
@@ -136,7 +144,11 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
       
       const response = await fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
         body: JSON.stringify(taskData),
       });
 
@@ -156,8 +168,11 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
       // para evitar problemas de estado durante la actualización
       
       console.log('🔄 TaskManager - handleSaveTask: Llamando a onTasksUpdated para actualizar UI...');
-      // Llamar al callback para recargar datos en el componente padre
-      onTasksUpdated();
+      // Añadir un pequeño retraso para asegurar que la BD se actualiza primero
+      setTimeout(() => {
+        // Llamar al callback para recargar datos en el componente padre
+        onTasksUpdated();
+      }, 300);
 
     } catch (err: any) {
       console.error('❌ TaskManager - handleSaveTask: Error al guardar tarea:', err);
@@ -181,8 +196,15 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
     try {
       console.log('🔄 TaskManager - handleImportTasks: Iniciando importación desde Google Sheets...');
       
-      // Llamar al endpoint API para importar las tareas
-      const response = await fetch('/api/tasks/import-google-sheets');
+      // Llamar al endpoint API para importar las tareas (usando POST)
+      const response = await fetch('/api/tasks/import-google-sheets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -197,8 +219,13 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
         alert(`Importación completada: ${data.tasksImported} tareas importadas correctamente${data.errors ? `, con ${data.errors.length} errores` : ''}.`);
         
         // Recargar los datos después de la importación exitosa
-        console.log('🔄 TaskManager - handleImportTasks: Recargando datos...');
-        onTasksUpdated();
+        // Esto llamará a loadData() en el componente padre (Home)
+        console.log('🔄 TaskManager - handleImportTasks: Forzando recarga completa de datos...');
+        
+        // Usar un retraso mayor para importaciones ya que pueden afectar a muchas tareas
+        setTimeout(() => {
+          onTasksUpdated();
+        }, 500);
       } else {
         alert('No se encontraron tareas para importar en la hoja de cálculo.');
       }
