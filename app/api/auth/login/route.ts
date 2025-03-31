@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authDb } from '@/app/lib/auth/db';
+import { validateUser } from '@/app/lib/auth/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await authDb.validateUser(username, password);
+    const user = await validateUser(username, password);
 
     if (!user) {
       return NextResponse.json(

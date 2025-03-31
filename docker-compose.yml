@@ -21,12 +21,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/dashboard
-      - POSTGRES_URL_NON_POOLING=postgresql://postgres:postgres@postgres:5432/dashboard
-      - POSTGRES_USER=postgres
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DATABASE=dashboard
+      - POSTGRES_URL=${POSTGRES_URL}
     depends_on:
       - postgres
     restart: unless-stopped

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authDb } from '@/app/lib/auth/db';
+import { getAllVisits } from '@/app/lib/auth/db';
 
 export async function GET(request: NextRequest) {
   try {
     // Obtener todas las visitas
-    const visits = await authDb.getAllVisits();
+    const visits = await getAllVisits();
     
     console.log('API: Total de visitas encontradas:', visits.length);
     console.log('API: Primera visita:', visits[0]);

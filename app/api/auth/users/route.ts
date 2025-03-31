@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authDb } from '@/app/lib/auth/db';
+// Importar funciones específicas
+import { 
+    getUsersWithoutPasswords, 
+    createUser, 
+    getUserByUsername, 
+    updateUser, 
+    getUserById, 
+    deleteUser 
+} from '@/app/lib/auth/db';
 
 // GET - Obtener todos los usuarios
 export async function GET(request: NextRequest) {
   try {
     // Obtener todos los usuarios sin contraseñas
-    const users = await authDb.getUsersWithoutPasswords();
+    const users = await getUsersWithoutPasswords();
     
     return NextResponse.json({ users });
   } catch (error) {
@@ -30,27 +38,22 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Verificar si el usuario ya existe
-    const existingUser = await authDb.getUserByUsername(username);
-    if (existingUser) {
-      return NextResponse.json(
-        { message: 'El nombre de usuario ya está en uso' },
-        { status: 400 }
-      );
-    }
-    
     // Crear el nuevo usuario
-    await authDb.createUser(username, password, name);
+    await createUser(username, password, name);
     
     // Devolver la lista actualizada de usuarios
-    const users = await authDb.getUsersWithoutPasswords();
+    const users = await getUsersWithoutPasswords();
     
     return NextResponse.json({ 
       users,
       message: 'Usuario creado correctamente' 
     });
-  } catch (error) {
+  } catch (error: any) { // Tipar error
     console.error('Error al crear usuario:', error);
+    // Manejar error de usuario duplicado
+    if (error.message === 'Username already exists.') {
+       return NextResponse.json({ message: 'El nombre de usuario ya está en uso' }, { status: 409 }); // Conflict
+    }
     return NextResponse.json(
       { message: 'Error interno del servidor' },
       { status: 500 }
@@ -72,7 +75,7 @@ export async function PUT(request: NextRequest) {
     }
     
     // Verificar que el usuario exista
-    const user = await authDb.getUserById(id);
+    const user = await getUserById(id);
     if (!user) {
       return NextResponse.json(
         { message: 'Usuario no encontrado' },
@@ -82,27 +85,35 @@ export async function PUT(request: NextRequest) {
     
     // Si se está cambiando el nombre de usuario, verificar que no exista otro con ese nombre
     if (username !== user.username) {
-      const existingUser = await authDb.getUserByUsername(username);
-      if (existingUser && existingUser.id !== id) {
-        return NextResponse.json(
-          { message: 'El nombre de usuario ya está en uso' },
-          { status: 400 }
-        );
-      }
+      // Nota: updateUser ahora maneja internamente la verificación de duplicados
+      // y lanza un error si el nuevo username ya existe. Simplificamos aquí.
+      // const existingUser = await getUserByUsername(username);
+      // if (existingUser && existingUser.id !== id) {
+      //   return NextResponse.json(
+      //     { message: 'El nombre de usuario ya está en uso' },
+      //     { status: 400 }
+      //   );
+      // }
     }
     
     // Actualizar el usuario
-    await authDb.updateUser(id, username, password || null, name);
+    await updateUser(id, username, password || null, name);
     
     // Devolver la lista actualizada de usuarios
-    const users = await authDb.getUsersWithoutPasswords();
+    const users = await getUsersWithoutPasswords();
     
     return NextResponse.json({ 
       users,
       message: 'Usuario actualizado correctamente' 
     });
-  } catch (error) {
+  } catch (error: any) { // Tipar error
     console.error('Error al actualizar usuario:', error);
+    // Manejar errores específicos de updateUser
+    if (error.message === 'Username already exists.') {
+       return NextResponse.json({ message: 'El nombre de usuario ya existe' }, { status: 409 }); // Conflict
+    } else if (error.message === 'User not found or update failed.') {
+       return NextResponse.json({ message: 'Usuario no encontrado' }, { status: 404 });
+    }
     return NextResponse.json(
       { message: 'Error interno del servidor' },
       { status: 500 }
@@ -126,7 +137,7 @@ export async function DELETE(request: NextRequest) {
     const userId = parseInt(id, 10);
     
     // Verificar que el usuario exista
-    const user = await authDb.getUserById(userId);
+    const user = await getUserById(userId);
     if (!user) {
       return NextResponse.json(
         { message: 'Usuario no encontrado' },
@@ -143,7 +154,7 @@ export async function DELETE(request: NextRequest) {
     }
     
     // Eliminar el usuario
-    await authDb.deleteUser(userId);
+    await deleteUser(userId);
     
     return NextResponse.json({ 
       message: 'Usuario eliminado correctamente' 

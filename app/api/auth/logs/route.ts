@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authDb } from '@/app/lib/auth/db';
+// Importar la función específica
+import { recordVisit } from '@/app/lib/auth/db';
 
 // Endpoint para registrar una visita manualmente (útil para pruebas)
 export async function POST(request: NextRequest) {
@@ -14,7 +15,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    await authDb.recordVisit(userId, username, userName);
+    // Llamar a la función directamente
+    await recordVisit(userId, username, userName);
     
     return NextResponse.json({ success: true, message: 'Visita registrada correctamente' });
   } catch (error) {
