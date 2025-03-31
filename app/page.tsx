@@ -157,6 +157,12 @@ export default function Home() {
     { name: 'Bloqueada', value: taskCounts['Bloqueada'] }
   ];
   
+  // Filtrar tareas por estado para las pestañas
+  const pendingTasks = allTasks.filter(task => task.status === 'Pendiente');
+  const inProgressTasks = allTasks.filter(task => task.status === 'En Progreso');
+  const blockedTasks = allTasks.filter(task => task.status === 'Bloqueada');
+  const completedTasks = allTasks.filter(task => task.status === 'Terminada');
+  
   // Obtener tareas próximas (ahora usa allTasks y filtra)
   const upcomingTasks = allTasks
     .filter(task => task.status !== 'Terminada' && task.importantDate)
@@ -322,10 +328,10 @@ export default function Home() {
         <div className="text-center p-4">Cargando tareas pendientes...</div>
       ) : (
         <div className="bg-white p-4 rounded shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Tareas Pendientes ({activeTasks.length})</h3>
-          {activeTasks.length > 0 ? (
+          <h3 className="text-lg font-semibold mb-4">Tareas Pendientes ({pendingTasks.length})</h3>
+          {pendingTasks.length > 0 ? (
             <ul className="list-disc pl-4">
-              {activeTasks.map(task => (
+              {pendingTasks.map(task => (
                 <li key={String(task.id)} className="mb-2">
                   <span className="font-medium">{task.description}</span>
                   <div className="text-sm text-gray-500">
@@ -350,10 +356,10 @@ export default function Home() {
         <div className="text-center p-4">Cargando tareas en progreso...</div>
       ) : (
         <div className="bg-white p-4 rounded shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Tareas En Progreso ({activeTasks.length})</h3>
-          {activeTasks.length > 0 ? (
+          <h3 className="text-lg font-semibold mb-4">Tareas En Progreso ({inProgressTasks.length})</h3>
+          {inProgressTasks.length > 0 ? (
             <ul className="list-disc pl-4">
-              {activeTasks.map(task => (
+              {inProgressTasks.map(task => (
                 <li key={String(task.id)} className="mb-2">
                   <span className="font-medium">{task.description}</span>
                   <div className="text-sm text-gray-500">
@@ -378,10 +384,10 @@ export default function Home() {
         <div className="text-center p-4">Cargando tareas detenidas...</div>
       ) : (
         <div className="bg-white p-4 rounded shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Tareas Detenidas ({activeTasks.length})</h3>
-          {activeTasks.length > 0 ? (
+          <h3 className="text-lg font-semibold mb-4">Tareas Detenidas ({blockedTasks.length})</h3>
+          {blockedTasks.length > 0 ? (
             <ul className="list-disc pl-4">
-              {activeTasks.map(task => (
+              {blockedTasks.map(task => (
                 <li key={String(task.id)} className="mb-2">
                   <span className="font-medium">{task.description}</span>
                   <div className="text-sm text-gray-500">
@@ -406,10 +412,10 @@ export default function Home() {
         <div className="text-center p-4">Cargando tareas terminadas...</div>
       ) : (
         <div className="bg-white p-4 rounded shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Tareas Terminadas ({activeTasks.length})</h3>
-          {activeTasks.length > 0 ? (
+          <h3 className="text-lg font-semibold mb-4">Tareas Terminadas ({completedTasks.length})</h3>
+          {completedTasks.length > 0 ? (
             <ul className="list-disc pl-4">
-              {activeTasks.map(task => (
+              {completedTasks.map(task => (
                 <li key={String(task.id)} className="mb-2">
                   <span className="font-medium">{task.description}</span>
                   <div className="text-sm text-gray-500">
@@ -513,25 +519,25 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-3 h-full">
                 <DirectKPI 
                   title="Total" 
-                  value={allTasks.filter(task => task.status !== 'Terminada').length} 
+                  value={pendingTasks.length + inProgressTasks.length + blockedTasks.length} 
                   color="success" 
                   onClick={() => navigateToSection('task-manager')} 
                 />
                 <DirectKPI 
                   title="Pendientes" 
-                  value={allTasks.filter(task => task.status === 'Pendiente').length} 
+                  value={pendingTasks.length} 
                   color="warning" 
                   onClick={() => navigateToSection('pending')} 
                 />
                 <DirectKPI 
                   title="En Progreso" 
-                  value={allTasks.filter(task => task.status === 'En Progreso').length} 
+                  value={inProgressTasks.length} 
                   color="info" 
                   onClick={() => navigateToSection('in-progress')} 
                 />
                 <DirectKPI 
                   title="Detenida" 
-                  value={allTasks.filter(task => task.status === 'Bloqueada').length} 
+                  value={blockedTasks.length} 
                   color="error" 
                   onClick={() => navigateToSection('blocked')} 
                 />
