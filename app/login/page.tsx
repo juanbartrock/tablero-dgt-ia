@@ -40,20 +40,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto my-auto min-h-screen flex flex-col justify-center bg-gray-100">
-      <div className="mb-4 text-center">
-        <div className="flex justify-center mb-4">
+    <>
+      <h1 className="text-center text-3xl font-bold text-primary my-8">DGT - Área Inteligencia Artificial</h1>
+      
+      <div className="max-w-sm mx-auto bg-white rounded-lg shadow-md p-6">
+        <div className="text-center mb-6">
           <Image 
             src="/images/logo-area-ia.png.png" 
             alt="Logo" 
-            width={150} 
-            height={150} 
-            className="rounded-lg"
+            width={120} 
+            height={120} 
+            className="rounded-lg mx-auto"
           />
         </div>
-      </div>
-      
-      <div className="rounded-lg bg-white p-6 shadow-md">
+        
         {error && (
           <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
             {error}
@@ -100,6 +100,6 @@ export default function LoginPage() {
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 } 
