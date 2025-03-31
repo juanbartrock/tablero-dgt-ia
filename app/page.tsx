@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Tabs from './components/Tabs';
-import DirectKPI from './components/dashboard/DirectKPI';
+import KPICard from './components/dashboard/KPICard';
 import StatusChart from './components/dashboard/StatusChart';
 import UpcomingTasksList from './components/dashboard/UpcomingTasksList';
-import DirectHighlighted from './components/dashboard/DirectHighlighted';
+import HighlightedTasksList from './components/dashboard/HighlightedTasksList';
 import TaskManager from './components/tasks/TaskManager';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -268,18 +268,20 @@ export default function Home() {
   
   // Callback para actualizar datos después de cambios en TaskManager
   const handleTasksUpdated = () => {
-    console.log('🔄 Home - handleTasksUpdated: TaskManager actualizó tareas, recargando todos los datos...');
+    console.log('🔄 Home - handleTasksUpdated: TaskManager actualizó tareas, recargando datos...');
     
     // Forzar estado de carga para actualizar la UI
     setIsLoading(true);
     
-    // Realizar una carga inmediata
+    // Realizar una carga inmediata con bypass de caché
     loadData(true);
     
     // Programar una segunda carga después de un retraso para asegurar
     // que todas las operaciones de base de datos se han completado
     setTimeout(() => {
       loadData(true);
+      // Finalmente quitamos el estado de carga
+      setIsLoading(false);
     }, 1000);
   };
 
@@ -486,25 +488,25 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-1">
               <div className="grid grid-cols-2 gap-3 h-full">
-                <DirectKPI 
+                <KPICard 
                   title="Total" 
                   value={allTasks.length} 
                   color="success" 
                   onClick={() => navigateToSection('task-manager')} 
                 />
-                <DirectKPI 
+                <KPICard 
                   title="Pendientes" 
                   value={taskCounts['Pendiente']} 
                   color="warning" 
                   onClick={() => navigateToSection('pending')} 
                 />
-                <DirectKPI 
+                <KPICard 
                   title="En Progreso" 
                   value={taskCounts['En Progreso']} 
                   color="info" 
                   onClick={() => navigateToSection('in-progress')} 
                 />
-                <DirectKPI 
+                <KPICard 
                   title="Detenida" 
                   value={taskCounts['Bloqueada']} 
                   color="error" 
@@ -514,7 +516,7 @@ export default function Home() {
             </div>
             
             <div className="lg:col-span-2">
-              <DirectHighlighted tasks={highlightedTasks} />
+              <HighlightedTasksList tasks={highlightedTasks} />
             </div>
           </div>
           
