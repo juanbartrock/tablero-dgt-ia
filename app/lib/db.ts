@@ -29,9 +29,14 @@ function mapRowToTask(row: any): Task {
 // Obtener todas las tareas
 export async function getAllTasks(): Promise<Task[]> {
   try {
+    console.log('getAllTasks - Calling query...'); // Log antes de query
     const result = await query('SELECT * FROM tasks ORDER BY created_at DESC');
+    console.log('getAllTasks - Query returned result.rows:', result.rows); // Log de result.rows CRUDO
+    console.log('getAllTasks - Query returned result.rowCount:', result.rowCount); // Log de result.rowCount aquí también
     // Mapear cada fila al tipo Task
-    return result.rows.map(mapRowToTask);
+    const mappedTasks = result.rows.map(mapRowToTask);
+    console.log('getAllTasks - Mapped tasks:', mappedTasks); // Log después de mapear
+    return mappedTasks;
   } catch (error) {
     console.error('Error fetching all tasks:', error);
     throw error; // O devolver [] según la política de errores
