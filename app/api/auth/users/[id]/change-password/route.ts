@@ -43,10 +43,14 @@ export async function POST(
     }
     
     // Verificar la contraseña actual
-    // ¡¡ADVERTENCIA DE SEGURIDAD!! - Comparación en texto plano temporalmente
-    // const isPasswordValid = await bcrypt.compare(currentPassword, userWithPassword.password);
-    const isPasswordValid = currentPassword === userWithPassword.password;
-    // ¡¡FIN ADVERTENCIA!!
+    if (!userWithPassword.password) {
+      return NextResponse.json(
+        { message: 'Error de configuración de usuario' },
+        { status: 500 }
+      );
+    }
+    
+    const isPasswordValid = await bcrypt.compare(currentPassword, userWithPassword.password);
     
     if (!isPasswordValid) {
       return NextResponse.json(

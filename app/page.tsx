@@ -513,7 +513,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-3 h-full">
                 <DirectKPI 
                   title="Total" 
-                  value={allTasks.length} 
+                  value={allTasks.filter(task => task.status !== 'Terminada').length} 
                   color="success" 
                   onClick={() => navigateToSection('task-manager')} 
                 />

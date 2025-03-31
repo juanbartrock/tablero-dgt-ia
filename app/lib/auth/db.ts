@@ -57,17 +57,9 @@ export async function validateUser(username: string, password: string): Promise<
       return null;
   }
 
-  // --- ¡¡¡ADVERTENCIA DE SEGURIDAD!!! ---
-  // La siguiente línea compara contraseñas en TEXTO PLANO.
-  // Esto es TEMPORAL porque la contraseña 'admin123' se insertó sin hashear.
-  // DEBE reemplazarse por bcrypt.compare TAN PRONTO como la contraseña en la DB esté hasheada.
-  const isValid = password === user.password;
-  // --- FIN DE LA ADVERTENCIA ---
-
-  // --- CÓDIGO CORRECTO (usar cuando la contraseña esté hasheada): ---
-  // const isValid = await bcrypt.compare(password, user.password);
-  // --- FIN CÓDIGO CORRECTO ---
-
+  // Usamos bcrypt.compare para validar la contraseña hasheada
+  const isValid = await bcrypt.compare(password, user.password);
+  
   if (!isValid) {
       return null;
   }
