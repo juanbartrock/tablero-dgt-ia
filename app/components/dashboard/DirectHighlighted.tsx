@@ -27,7 +27,7 @@ export default function DirectHighlighted({ tasks }: DirectHighlightedProps) {
   
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-slate-100 border border-blue-200 rounded-xl p-6 shadow-lg h-full" data-testid="direct-highlighted-empty">
+      <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-xl p-6 shadow-lg h-full" data-testid="direct-highlighted-empty">
         <h3 className="text-xl font-bold text-yellow-600 mb-3 flex items-center">
           <span className="text-2xl mr-2">🌟</span> Tareas destacadas
         </h3>
@@ -40,12 +40,12 @@ export default function DirectHighlighted({ tasks }: DirectHighlightedProps) {
   }
   
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-slate-100 border border-blue-200 rounded-xl p-6 shadow-lg h-full" data-testid="direct-highlighted">
+    <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-xl p-6 shadow-lg h-full" data-testid="direct-highlighted">
       <h3 className="text-xl font-bold text-yellow-600 mb-4 flex items-center">
         <span className="text-2xl mr-2">🌟</span> Tareas destacadas
       </h3>
       
-      <ul className="divide-y divide-blue-100 space-y-1">
+      <ul className="divide-y divide-amber-100 space-y-1">
         {tasks.map(task => (
           <li key={`highlighted-${task.id}`} className="py-3 group hover:bg-yellow-50 rounded-lg transition-colors duration-200 px-3 -mx-3">
             <div className="flex items-start">
