@@ -11,8 +11,8 @@ COPY postcss.config.js ./
 
 # Instalar dependencias
 RUN npm install
-# Instalar bcryptjs para la autenticación
-RUN npm install bcryptjs
+# Instalar dependencias adicionales para Postgres
+RUN npm install bcryptjs @vercel/postgres drizzle-orm drizzle-kit pg @types/pg @types/bcryptjs
 
 # Asegurar que el directorio public exista
 RUN mkdir -p public

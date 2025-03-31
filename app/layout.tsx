@@ -1,8 +1,19 @@
 import type { Metadata } from 'next';
 import React from 'react';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from './lib/auth/auth-context';
 import PulsingTitle from './components/PulsingTitle';
+import { setupDatabase } from './lib/db/setup';
+
+const inter = Inter({ subsets: ['latin'] });
+
+// Inicializar la base de datos al cargar la aplicación
+try {
+  setupDatabase();
+} catch (error) {
+  console.error('Error al inicializar la aplicación:', error);
+}
 
 export const metadata: Metadata = {
   title: 'DGT - Área de Inteligencia Artificial',
@@ -19,7 +30,7 @@ export default function RootLayout({
       <head>
         {/* Metaetiquetas y recursos adicionales */}
       </head>
-      <body className="min-h-screen">
+      <body className={inter.className}>
         <AuthProvider>
           <main className="container mx-auto py-4 px-4 max-w-7xl">
             <div className="text-center mb-4">

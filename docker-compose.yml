@@ -1,6 +1,18 @@
 version: '3'
 
 services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dashboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   tablero:
     build:
       context: .
@@ -9,8 +21,19 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/dashboard
+      - POSTGRES_URL_NON_POOLING=postgresql://postgres:postgres@postgres:5432/dashboard
+      - POSTGRES_USER=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DATABASE=dashboard
+    depends_on:
+      - postgres
     restart: unless-stopped
     volumes:
       - ./app:/app/app
       - ./public:/app/public
-      - ./data:/app/public/data 
+      - ./data:/app/public/data
+
+volumes:
+  postgres_data: 
