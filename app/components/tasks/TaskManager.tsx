@@ -90,6 +90,7 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
       setError(null);
       setActionLoading(true);
       try {
+        console.log('🗑️ TaskManager - handleDelete: Eliminando tarea con ID:', taskId);
         const response = await fetch(`/api/tasks/${taskId}`, {
           method: 'DELETE',
         });
@@ -99,12 +100,14 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
           throw new Error(data.message || 'Error al eliminar la tarea');
         }
         
-        // console.log(data.message); // Mensaje de éxito
-        onTasksUpdated(); // Llamar al callback para que el padre recargue
-        // Ya no actualizamos el estado local: setTasks(tasks.filter(task => task.id !== taskId));
+        console.log('✅ TaskManager - handleDelete: Tarea eliminada exitosamente');
+        
+        // Llamar al callback para que el padre recargue todos los datos
+        console.log('🔄 TaskManager - handleDelete: Llamando a onTasksUpdated para actualizar UI...');
+        onTasksUpdated();
 
       } catch (err: any) {
-        console.error('Error al eliminar la tarea:', err);
+        console.error('❌ TaskManager - handleDelete: Error al eliminar la tarea:', err);
         setError(err.message || 'Error al eliminar la tarea. Por favor, intente nuevamente.');
       } finally {
          setActionLoading(false);
@@ -149,8 +152,11 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
       setShowForm(false);
       setCurrentTask(undefined);
       
+      // Importante: Primero cerrar el formulario antes de actualizar los datos
+      // para evitar problemas de estado durante la actualización
+      
       console.log('🔄 TaskManager - handleSaveTask: Llamando a onTasksUpdated para actualizar UI...');
-      // Llamar al callback para recargar datos
+      // Llamar al callback para recargar datos en el componente padre
       onTasksUpdated();
 
     } catch (err: any) {
@@ -169,13 +175,41 @@ export default function TaskManager({ initialTasks, onTasksUpdated }: TaskManage
 
   // Importar tareas desde Google Sheets
   const handleImportTasks = async () => {
-    // ... (Esta lógica necesita una API /api/tasks/import-google-sheets si debe funcionar)
-    // Por ahora, la dejamos como estaba pero marcamos que necesita refactor
-    console.warn("TODO: handleImportTasks necesita usar fetch a una API dedicada.");
-    // Simulación temporal (no hace nada útil)
+    setError(null);
     setImporting(true);
-    setError('Funcionalidad de importación no implementada con API.');
-    setTimeout(() => { setImporting(false); }, 1000);
+    
+    try {
+      console.log('🔄 TaskManager - handleImportTasks: Iniciando importación desde Google Sheets...');
+      
+      // Llamar al endpoint API para importar las tareas
+      const response = await fetch('/api/tasks/import-google-sheets');
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al importar tareas desde Google Sheets');
+      }
+      
+      const data = await response.json();
+      console.log('✅ TaskManager - handleImportTasks: Respuesta recibida:', data);
+      
+      // Notificar al usuario del resultado de la importación
+      if (data.tasksImported > 0) {
+        alert(`Importación completada: ${data.tasksImported} tareas importadas correctamente${data.errors ? `, con ${data.errors.length} errores` : ''}.`);
+        
+        // Recargar los datos después de la importación exitosa
+        console.log('🔄 TaskManager - handleImportTasks: Recargando datos...');
+        onTasksUpdated();
+      } else {
+        alert('No se encontraron tareas para importar en la hoja de cálculo.');
+      }
+      
+    } catch (err: any) {
+      console.error('❌ TaskManager - handleImportTasks: Error al importar tareas:', err);
+      setError(`Error al importar tareas: ${err.message}`);
+      alert(`Error al importar tareas: ${err.message}`);
+    } finally {
+      setImporting(false);
+    }
   };
 
   // Manejar la eliminación de todas las tareas

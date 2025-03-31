@@ -86,7 +86,9 @@ export default function Home() {
 
       console.log('🔄 Home - loadData: Peticiones completadas, actualizando estados...');
       console.log('📊 Tareas totales recibidas:', allData.tasks?.length || 0);
+      console.log('📊 Tareas activas recibidas:', activeData.tasks?.length || 0);
       console.log('📊 Tareas destacadas recibidas:', highlightedData.tasks?.length || 0);
+      console.log('📊 Conteos por estado:', JSON.stringify(countsData.counts));
       
       setActiveTasks(activeData.tasks || []);
       setAllTasks(allData.tasks || []);
@@ -262,8 +264,8 @@ export default function Home() {
   
   // Callback para actualizar datos después de cambios en TaskManager
   const handleTasksUpdated = () => {
-    console.log('TaskManager updated tasks, reloading data...');
-    loadData();
+    console.log('🔄 Home - handleTasksUpdated: TaskManager actualizó tareas, recargando todos los datos...');
+    loadData(); // Recarga todos los datos
   };
 
   // Contenido de las pestañas
