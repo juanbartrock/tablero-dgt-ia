@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { setupDatabase } from '@/app/lib/db/setup';
 
-export const maxDuration = 300; // 5 minutos máximo
+export const maxDuration = 60; // 60 segundos máximo
 
 export async function GET() {
   try {
