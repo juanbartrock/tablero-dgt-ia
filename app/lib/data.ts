@@ -8,7 +8,7 @@ import {
   getCompletedTasks, 
   getPendingTasks, 
   getTasksInProgress, 
-  getTaskCountByStatus 
+  getTaskCounts as getTaskCountByStatus 
 } from './db';
 import { Task } from './types';
 
