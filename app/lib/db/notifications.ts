@@ -22,7 +22,7 @@ export type NotificationView = {
 };
 
 // Obtener notificación activa
-export async function getCurrentNotification(): Promise<Notification | null> {
+export async function getCurrentNotification(userId?: number): Promise<Notification | null> {
   try {
     const result = await db.select()
       .from(notifications)
@@ -33,14 +33,26 @@ export async function getCurrentNotification(): Promise<Notification | null> {
 
     const notification = result[result.length - 1];
     
-    // Verificar si la notificación ha sido vista
-    const viewResult = await db.select()
-      .from(notificationViews)
-      .where(eq(notificationViews.notification_id, notification.id));
+    // Verificar si la notificación ha sido vista por este usuario
+    if (userId) {
+      const viewResult = await db.select()
+        .from(notificationViews)
+        .where(
+          and(
+            eq(notificationViews.notification_id, notification.id),
+            eq(notificationViews.user_id, userId)
+          )
+        );
+      
+      return {
+        ...notification,
+        hasBeenViewed: viewResult.length > 0
+      };
+    }
     
     return {
       ...notification,
-      hasBeenViewed: viewResult.length > 0
+      hasBeenViewed: false
     };
   } catch (error) {
     console.error('Error al obtener notificación activa:', error);
@@ -75,14 +87,15 @@ export async function setImportantNotification(
   }
 }
 
-// Borrar notificación (eliminar completamente)
+// Borrar notificación (marcar como inactiva)
 export async function clearImportantNotification(notificationId: number): Promise<void> {
   try {
-    await db.delete(notifications)
+    await db.update(notifications)
+      .set({ status: 'inactive' })
       .where(eq(notifications.id, notificationId));
   } catch (error) {
-    console.error(`Error al eliminar notificación ${notificationId}:`, error);
-    throw new Error('No se pudo eliminar la notificación');
+    console.error(`Error al desactivar notificación ${notificationId}:`, error);
+    throw new Error('No se pudo desactivar la notificación');
   }
 }
 

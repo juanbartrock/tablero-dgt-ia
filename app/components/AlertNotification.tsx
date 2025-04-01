@@ -50,7 +50,7 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
   const loadNotification = async () => {
     try {
       setLoading(true);
-      const notification = await getCurrentNotification();
+      const notification = await getCurrentNotification(user?.id);
       
       if (notification) {
         console.log('AlertNotification: Notificación recibida:', notification);
