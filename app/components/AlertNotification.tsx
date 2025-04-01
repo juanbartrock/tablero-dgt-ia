@@ -71,23 +71,33 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
     if (!currentNotification || !user) return;
     
     try {
+      console.log('Intentando marcar como vista la notificación:', {
+        id: currentNotification.id,
+        message: currentNotification.message
+      });
+      
       const response = await fetch('/api/notifications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ notificationId: currentNotification.id }),
+        body: JSON.stringify({ 
+          notificationId: currentNotification.id 
+        }),
         credentials: 'include'
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
         throw new Error('Error al marcar como vista');
       }
 
-      // Actualizar el estado local
-      setCurrentNotification(prev => prev ? { ...prev, hasBeenViewed: true } : null);
+      // Recargar la notificación para asegurar que tenemos el estado más reciente
+      await loadNotification();
     } catch (error) {
       console.error('Error al marcar notificación como vista:', error);
+      alert('No se pudo marcar la notificación como vista. Por favor, intenta de nuevo.');
     }
   };
   

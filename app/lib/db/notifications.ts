@@ -154,9 +154,22 @@ export async function hasUserViewedNotification(
 // Obtener historial de notificaciones
 export async function getNotificationHistory(): Promise<Notification[]> {
   try {
-    return await db.select()
-      .from(notifications)
-      .orderBy(notifications.timestamp);
+    const query = sql`
+      SELECT n.*, u.name as created_by_name
+      FROM notifications n
+      LEFT JOIN users u ON n.created_by_id = u.id
+      ORDER BY n.timestamp DESC
+    `;
+    
+    const result = await query;
+    return result.rows.map((row: any) => ({
+      id: row.id,
+      message: row.message,
+      timestamp: new Date(row.timestamp),
+      created_by_id: row.created_by_id,
+      created_by_name: row.created_by_name || 'Sistema',
+      status: row.status
+    }));
   } catch (error) {
     console.error('Error al obtener historial de notificaciones:', error);
     return [];
