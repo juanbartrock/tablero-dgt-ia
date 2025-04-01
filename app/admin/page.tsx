@@ -40,6 +40,7 @@ interface NotificationView {
 }
 
 interface NotificationItem {
+  id: number;
   message: string;
   timestamp: number;
   createdBy: string;
@@ -116,18 +117,18 @@ export default function AdminPage() {
   // Cargar la notificación actual
   const loadNotification = async () => {
     try {
-      // Intentar obtener desde localStorage directamente
-      const storedNotification = localStorage.getItem('important_notification');
-      if (storedNotification) {
-        const data = JSON.parse(storedNotification);
-        if (data.message) {
-          setCurrentNotification(data);
-          setNotification(data.message);
-          return;
-        }
+      const response = await fetch('/api/notifications/current');
+      if (!response.ok) {
+        throw new Error('Error al cargar la notificación');
       }
-      setCurrentNotification(null);
-      setNotification('');
+      const data = await response.json();
+      if (data.notification) {
+        setCurrentNotification(data.notification);
+        setNotification(data.notification.message);
+      } else {
+        setCurrentNotification(null);
+        setNotification('');
+      }
     } catch (error) {
       console.error('Error al cargar la notificación:', error);
     }
@@ -179,67 +180,63 @@ export default function AdminPage() {
 
     try {
       if (notification.trim()) {
-        // Verificar que el usuario exista antes de acceder a sus propiedades
         if (!user) {
           throw new Error('Usuario no autenticado');
         }
 
-        // Guardar en localStorage directamente
-        localStorage.setItem(
-          'important_notification',
-          JSON.stringify({ message: notification, timestamp: new Date().toISOString() })
-        );
-        
-        setCurrentNotification({ 
-          message: notification, 
-          timestamp: Date.now(), 
-          createdBy: user.username, 
-          createdAt: new Date().toISOString(), 
-          createdById: user.id, 
-          createdByName: user.name, 
-          viewCount: 0 
+        const response = await fetch('/api/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: notification,
+            createdById: user.id,
+            createdByName: user.name
+          }),
+          credentials: 'include'
         });
-        
-        setSuccessMessage('Notificación importante actualizada correctamente');
-        
-        // Actualizar la notificación en la página principal si está abierta
-        updateNotificationDisplay();
-      } else {
-        // Eliminar de localStorage
-        localStorage.removeItem('important_notification');
-        setCurrentNotification(null);
-        setSuccessMessage('Notificación importante eliminada');
-        
-        // Actualizar la notificación en la página principal si está abierta
+
+        if (!response.ok) {
+          throw new Error('Error al crear la notificación');
+        }
+
+        const data = await response.json();
+        setCurrentNotification(data.notification);
+        setSuccessMessage('Notificación creada correctamente');
         updateNotificationDisplay();
       }
     } catch (error) {
-      console.error('Error al actualizar la notificación:', error);
-      setMessage('Error al actualizar la notificación. Por favor, intente nuevamente.');
+      console.error('Error al crear la notificación:', error);
+      setMessage('Error al crear la notificación');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Manejar la eliminación de la notificación
-  const handleClear = async () => {
-    setIsLoading(true);
-    setMessage(null);
+  // Manejar la eliminación de notificación
+  const handleNotificationDelete = async () => {
+    if (!currentNotification) return;
 
-    try {
-      // Eliminar de localStorage
-      localStorage.removeItem('important_notification');
-      setCurrentNotification(null);
-      setNotification('');
-      setSuccessMessage('Notificación importante eliminada');
-      
-      // Actualizar la notificación en la página principal si está abierta
-      updateNotificationDisplay();
-    } catch (error) {
-      console.error('Error al eliminar la notificación:', error);
-      setMessage('Error al actualizar la notificación. Por favor, intente nuevamente.');
-    } finally {
-      setIsLoading(false);
+    if (confirm('¿Estás seguro de que deseas desactivar esta notificación?')) {
+      try {
+        const response = await fetch(`/api/notifications/admin?id=${currentNotification.id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al desactivar la notificación');
+        }
+
+        setCurrentNotification(null);
+        setNotification('');
+        setSuccessMessage('Notificación desactivada correctamente');
+        updateNotificationDisplay();
+      } catch (error) {
+        console.error('Error al desactivar la notificación:', error);
+        setMessage('Error al desactivar la notificación');
+      }
     }
   };
 
@@ -334,6 +331,7 @@ export default function AdminPage() {
         
         // Convertir al formato esperado por el componente
         const formattedNotifications = sorted.map(notification => ({
+          id: notification.id,
           message: notification.message,
           timestamp: new Date(notification.timestamp).getTime(),
           createdBy: notification.createdByName,
@@ -350,6 +348,7 @@ export default function AdminPage() {
         if (activeNotification) {
           // Convertir al formato esperado
           setCurrentNotification({
+            id: activeNotification.id,
             message: activeNotification.message,
             timestamp: new Date(activeNotification.timestamp).getTime(),
             createdBy: activeNotification.createdByName,
@@ -391,48 +390,6 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Error al guardar notificación:', error);
       alert('Error al guardar la notificación');
-    }
-  };
-  
-  const handleNotificationDelete = () => {
-    if (!currentNotification || !user) {
-      alert('No hay notificación activa para eliminar');
-      return;
-    }
-    
-    try {
-      // Crear registro de eliminación
-      const deletionRecord = {
-        notificationId: currentNotification.timestamp,
-        notificationMessage: currentNotification.message,
-        deletedBy: user.username,
-        deletedByName: user.name,
-        deletedById: user.id,
-        deletedAt: new Date().toISOString(),
-        originalCreatedBy: currentNotification.createdBy,
-        originalCreatedAt: currentNotification.createdAt
-      };
-      
-      // Agregar al historial de eliminaciones
-      let deletions = [];
-      const existingDeletions = localStorage.getItem('deleted_notifications');
-      if (existingDeletions) {
-        deletions = JSON.parse(existingDeletions);
-      }
-      deletions.push(deletionRecord);
-      localStorage.setItem('deleted_notifications', JSON.stringify(deletions));
-      
-      // Eliminar notificación actual
-      localStorage.removeItem('important_notification');
-      
-      // Actualizar estado
-      setCurrentNotification(null);
-      setDeletedNotifications([...deletedNotifications, deletionRecord]);
-      
-      alert('Notificación eliminada correctamente');
-    } catch (error) {
-      console.error('Error al eliminar notificación:', error);
-      alert('Error al eliminar la notificación');
     }
   };
   
@@ -478,32 +435,26 @@ export default function AdminPage() {
     return deletedNotifications.find(deleted => deleted.notificationId === notificationId);
   };
 
-  // Función para eliminar todas las notificaciones y su historial
-  const handleDeleteAllNotifications = () => {
-    if (confirm('¿Estás seguro de que deseas eliminar TODAS las notificaciones y su historial? Esta acción no se puede deshacer.')) {
+  // Manejar la eliminación de todas las notificaciones
+  const handleDeleteAllNotifications = async () => {
+    if (confirm('¿Estás seguro de que deseas desactivar TODAS las notificaciones? Esta acción no se puede deshacer.')) {
       try {
-        // Eliminar notificación actual
-        localStorage.removeItem('important_notification');
+        const response = await fetch('/api/notifications/admin/all', {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al desactivar las notificaciones');
+        }
+
+        // Recargar datos de notificaciones
+        await loadNotificationData();
         
-        // Eliminar el historial de notificaciones creadas
-        localStorage.removeItem('created_notifications');
-        
-        // Eliminar el historial de notificaciones vistas
-        localStorage.removeItem('viewed_notifications');
-        
-        // Eliminar el historial de notificaciones eliminadas
-        localStorage.removeItem('deleted_notifications');
-        
-        // Actualizar estados
-        setCurrentNotification(null);
-        setNotificationsHistory([]);
-        setNotificationViews([]);
-        setDeletedNotifications([]);
-        
-        alert('Todos los datos de notificaciones han sido eliminados correctamente.');
+        alert('Todas las notificaciones han sido desactivadas correctamente.');
       } catch (error) {
-        console.error('Error al eliminar datos de notificaciones:', error);
-        alert('Ocurrió un error al eliminar las notificaciones.');
+        console.error('Error al desactivar notificaciones:', error);
+        alert('Ocurrió un error al desactivar las notificaciones.');
       }
     }
   };
