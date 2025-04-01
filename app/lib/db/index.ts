@@ -4,7 +4,10 @@ import * as schema from './schema';
 import bcrypt from 'bcryptjs';
 
 // Crear cliente Drizzle usando la conexión de Vercel
-export const db = drizzle(sql, { schema });
+const db = drizzle(sql, { schema });
+
+// Exportar la instancia de db
+export { db };
 
 // Función para inicializar la base de datos
 export async function initializeDatabase() {

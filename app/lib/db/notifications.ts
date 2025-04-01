@@ -74,14 +74,14 @@ export async function clearImportantNotification(notificationId: number): Promis
   }
 }
 
-// Marcar notificación como vista por un usuario
+// Marcar notificación como vista
 export async function markNotificationAsViewed(
   notificationId: number,
   userId: number
 ): Promise<void> {
   try {
-    // Verificar si ya ha sido vista
-    const existing = await db.select()
+    // Verificar si ya existe un registro de visualización
+    const existingView = await db.select()
       .from(notificationViews)
       .where(
         and(
@@ -89,16 +89,18 @@ export async function markNotificationAsViewed(
           eq(notificationViews.userId, userId)
         )
       );
-    
-    // Si no ha sido vista, registrar vista
-    if (existing.length === 0) {
+
+    if (existingView.length === 0) {
+      // Crear nuevo registro de visualización
       await db.insert(notificationViews).values({
         notificationId,
-        userId
+        userId,
+        viewedAt: new Date()
       });
     }
   } catch (error) {
-    console.error(`Error al marcar notificación ${notificationId} como vista:`, error);
+    console.error('Error al marcar notificación como vista:', error);
+    throw error;
   }
 }
 
