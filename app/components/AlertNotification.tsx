@@ -20,33 +20,7 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
   const [currentNotification, setCurrentNotification] = useState<Notification | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Cargar la notificación actual - Función principal
-  useEffect(() => {
-    // Prioridad a las notificaciones pasadas como props
-    if (message) {
-      console.log('AlertNotification: Mostrando notificación desde props:', message);
-      // Crear un objeto de notificación temporal para props
-      setCurrentNotification({ 
-        id: 0, 
-        message, 
-        timestamp: new Date(), 
-        created_by_id: 0, 
-        created_by_name: 'Sistema', 
-        status: 'active'
-      });
-      setLoading(false);
-    } else {
-      // Cargar desde API
-      loadNotification();
-    }
-    
-    // Configurar un intervalo para actualizar periódicamente - cada 10 segundos
-    const interval = setInterval(loadNotification, 10000);
-    
-    return () => clearInterval(interval);
-  }, [message]);
-  
-  // Cargar notificación desde API
+  // Cargar la notificación actual
   const loadNotification = async () => {
     try {
       setLoading(true);
@@ -56,7 +30,6 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
         console.log('AlertNotification: Notificación recibida:', notification);
         setCurrentNotification(notification);
       } else {
-        // Solo limpiar si ya había una notificación y no hay props
         if (currentNotification && !message) {
           console.log('AlertNotification: No hay notificación activa');
           setCurrentNotification(null);
@@ -68,68 +41,60 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (message) {
+      setCurrentNotification({ 
+        id: 0, 
+        message, 
+        timestamp: new Date(), 
+        created_by_id: 0, 
+        created_by_name: 'Sistema', 
+        status: 'active'
+      });
+      setLoading(false);
+    } else {
+      loadNotification();
+    }
+    
+    const interval = setInterval(loadNotification, 10000);
+    return () => clearInterval(interval);
+  }, [message]);
   
-  // Marcar la notificación como vista
+  // Marcar como vista
   const handleMarkAsViewed = async () => {
     if (!currentNotification || !user) return;
     
     try {
       console.log('AlertNotification: Marcando notificación como vista:', currentNotification.id);
-      
-      const response = await fetch('/api/notifications/viewed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ notificationId: currentNotification.id }),
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al marcar la notificación como vista');
-      }
-
-      // Recargar la notificación para obtener el estado actualizado
+      await markNotificationAsViewed(currentNotification.id, user.id);
       await loadNotification();
     } catch (error) {
       console.error('Error al marcar notificación como vista:', error);
     }
   };
   
-  // Eliminar la notificación actual (solo para admin)
+  // Eliminar (marcar como inactiva)
   const handleDeleteNotification = async () => {
     if (!currentNotification || !user || user.id !== 1) return;
     
     try {
-      console.log('AlertNotification: Eliminando notificación:', currentNotification.id);
-      
-      const response = await fetch(`/api/notifications/admin?id=${currentNotification.id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar la notificación');
-      }
-
-      // Recargar la notificación para actualizar la vista
+      console.log('AlertNotification: Desactivando notificación:', currentNotification.id);
+      await clearImportantNotification(currentNotification.id);
       await loadNotification();
     } catch (error) {
-      console.error('Error al eliminar notificación:', error);
+      console.error('Error al desactivar notificación:', error);
     }
   };
   
-  // Si está cargando, muestra un loader pequeño
   if (loading && !currentNotification && !message) {
     return <div className="hidden">Cargando notificaciones...</div>;
   }
   
-  // Si no hay notificación, no mostrar nada
   if (!currentNotification && !message) {
     return <div className="hidden"></div>;
   }
   
-  // Si hay una notificación para mostrar
   if (currentNotification) {
     return (
       <div className="bg-red-600 text-white p-4 mb-6 rounded-md shadow-md border-2 border-red-800">
@@ -164,7 +129,6 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
               </button>
             )}
             
-            {/* Botón de eliminar solo para administradores */}
             {user && user.id === 1 && (
               <button
                 onClick={handleDeleteNotification}
@@ -179,5 +143,5 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
     );
   }
   
-  return null; // Fallback por si acaso
+  return null;
 } 
