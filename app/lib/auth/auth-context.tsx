@@ -40,24 +40,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkSession = async () => {
       try {
         setIsLoading(true);
-        const storedUser = localStorage.getItem('auth_user');
+        const response = await fetch('/api/auth/validate-session', {
+          method: 'GET',
+          credentials: 'include', // Importante para incluir las cookies
+        });
         
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-          
-          // Registrar la visita al recuperar la sesión
-          try {
-            await fetch('/api/auth/validate-login', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ user: parsedUser }),
-            });
-          } catch (err) {
-            console.error('Error al registrar visita:', err);
-          }
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
         }
       } catch (err) {
         console.error('Error al verificar sesión:', err);
@@ -79,6 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Importante para incluir las cookies
         body: JSON.stringify({ username, password }),
       });
 
@@ -90,10 +81,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       setUser(data.user);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
-      
-      // La visita ya se registra en el backend durante la validación del usuario
-      
       return true;
     } catch (err) {
       console.error('Error en login:', err);
@@ -104,9 +91,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('auth_user');
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // Importante para incluir las cookies
+      });
+      setUser(null);
+    } catch (err) {
+      console.error('Error en logout:', err);
+    }
   };
 
   return (

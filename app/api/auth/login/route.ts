@@ -22,7 +22,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ user });
+    // Crear la respuesta con el usuario
+    const response = NextResponse.json({ user });
+
+    // Establecer la cookie de autenticación
+    response.cookies.set('auth_user', JSON.stringify(user), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7 // 7 días
+    });
+
+    return response;
   } catch (error) {
     console.error('Error en login:', error);
     return NextResponse.json(
