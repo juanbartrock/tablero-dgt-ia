@@ -11,6 +11,7 @@ export type Notification = {
   createdById: number;
   createdByName: string;
   status: string;
+  hasBeenViewed?: boolean;
 };
 
 export type NotificationView = {
@@ -28,7 +29,19 @@ export async function getCurrentNotification(): Promise<Notification | null> {
       .where(eq(notifications.status, 'active'))
       .orderBy(notifications.timestamp);
     
-    return result.length > 0 ? result[result.length - 1] : null;
+    if (result.length === 0) return null;
+
+    const notification = result[result.length - 1];
+    
+    // Verificar si la notificación ha sido vista
+    const viewResult = await db.select()
+      .from(notificationViews)
+      .where(eq(notificationViews.notificationId, notification.id));
+    
+    return {
+      ...notification,
+      hasBeenViewed: viewResult.length > 0
+    };
   } catch (error) {
     console.error('Error al obtener notificación activa:', error);
     return null;

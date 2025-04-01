@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/app/lib/auth/auth-context';
-import { getImportantNotification, markNotificationAsViewed, clearImportantNotification, Notification } from '@/app/lib/notification';
+import { getCurrentNotification, markNotificationAsViewed, clearImportantNotification, Notification } from '@/app/lib/db/notifications';
 
 interface AlertNotificationProps {
   message?: string;
@@ -50,7 +50,7 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
   const loadNotification = async () => {
     try {
       setLoading(true);
-      const notification = await getImportantNotification();
+      const notification = await getCurrentNotification();
       
       if (notification) {
         console.log('AlertNotification: Notificación recibida:', notification);
@@ -71,17 +71,14 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
   
   // Marcar la notificación como vista
   const handleMarkAsViewed = async () => {
-    if (!currentNotification || !user || currentNotification.hasBeenViewed) return;
+    if (!currentNotification || !user) return;
     
     try {
       console.log('AlertNotification: Marcando notificación como vista:', currentNotification.id);
-      await markNotificationAsViewed(currentNotification.id);
+      await markNotificationAsViewed(currentNotification.id, user.id);
       
-      // Actualizar estado local
-      setCurrentNotification({
-        ...currentNotification,
-        hasBeenViewed: true
-      });
+      // Recargar la notificación para obtener el estado actualizado
+      await loadNotification();
     } catch (error) {
       console.error('Error al marcar notificación como vista:', error);
     }
