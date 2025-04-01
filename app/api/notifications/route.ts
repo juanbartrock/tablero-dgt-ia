@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentNotification, getNotificationHistory, hasUserViewedNotification } from '@/app/lib/db/notifications';
+import { 
+  getCurrentNotification, 
+  getNotificationHistory, 
+  hasUserViewedNotification,
+  markNotificationAsViewed 
+} from '@/app/lib/db/notifications';
 import { cookies } from 'next/headers';
-import { db } from '@/app/lib/db';
+import { db } from '@/app/lib/db/index';
 import { users } from '@/app/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
