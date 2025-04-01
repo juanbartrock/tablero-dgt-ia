@@ -38,15 +38,15 @@ export const notifications = pgTable('notifications', {
   id: serial('id').primaryKey(),
   message: text('message').notNull(),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
-  createdById: integer('created_by_id').notNull(),
-  createdByName: varchar('created_by_name', { length: 100 }).notNull(),
+  created_by_id: integer('created_by_id').notNull(),
+  created_by_name: varchar('created_by_name', { length: 100 }).notNull(),
   status: varchar('status', { length: 20 }).notNull().default('active')
 });
 
 // Tabla para seguimiento de visualizaciones de notificaciones
 export const notificationViews = pgTable('notification_views', {
   id: serial('id').primaryKey(),
-  notificationId: integer('notification_id').notNull(),
-  userId: integer('user_id').notNull(),
-  viewedAt: timestamp('viewed_at').defaultNow().notNull()
+  notification_id: integer('notification_id').notNull(),
+  user_id: integer('user_id').notNull(),
+  viewed_at: timestamp('viewed_at').defaultNow().notNull()
 }); 

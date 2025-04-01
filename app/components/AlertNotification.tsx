@@ -30,8 +30,8 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
         id: 0, 
         message, 
         timestamp: new Date(), 
-        createdById: 0, 
-        createdByName: 'Sistema', 
+        created_by_id: 0, 
+        created_by_name: 'Sistema', 
         status: 'active'
       });
       setLoading(false);

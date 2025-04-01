@@ -8,17 +8,17 @@ export type Notification = {
   id: number;
   message: string;
   timestamp: Date;
-  createdById: number;
-  createdByName: string;
+  created_by_id: number;
+  created_by_name: string;
   status: string;
   hasBeenViewed?: boolean;
 };
 
 export type NotificationView = {
   id: number;
-  notificationId: number;
-  userId: number;
-  viewedAt: Date;
+  notification_id: number;
+  user_id: number;
+  viewed_at: Date;
 };
 
 // Obtener notificación activa
@@ -36,7 +36,7 @@ export async function getCurrentNotification(): Promise<Notification | null> {
     // Verificar si la notificación ha sido vista
     const viewResult = await db.select()
       .from(notificationViews)
-      .where(eq(notificationViews.notificationId, notification.id));
+      .where(eq(notificationViews.notification_id, notification.id));
     
     return {
       ...notification,
@@ -63,8 +63,8 @@ export async function setImportantNotification(
     // Crear nueva notificación
     const result = await db.insert(notifications).values({
       message,
-      createdById,
-      createdByName,
+      created_by_id: createdById,
+      created_by_name: createdByName,
       status: 'active'
     }).returning();
     
@@ -98,17 +98,17 @@ export async function markNotificationAsViewed(
       .from(notificationViews)
       .where(
         and(
-          eq(notificationViews.notificationId, notificationId),
-          eq(notificationViews.userId, userId)
+          eq(notificationViews.notification_id, notificationId),
+          eq(notificationViews.user_id, userId)
         )
       );
 
     if (existingView.length === 0) {
       // Crear nuevo registro de visualización
       await db.insert(notificationViews).values({
-        notificationId,
-        userId,
-        viewedAt: new Date()
+        notification_id: notificationId,
+        user_id: userId,
+        viewed_at: new Date()
       });
     }
   } catch (error) {
@@ -127,8 +127,8 @@ export async function hasUserViewedNotification(
       .from(notificationViews)
       .where(
         and(
-          eq(notificationViews.notificationId, notificationId),
-          eq(notificationViews.userId, userId)
+          eq(notificationViews.notification_id, notificationId),
+          eq(notificationViews.user_id, userId)
         )
       );
     
