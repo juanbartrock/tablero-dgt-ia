@@ -21,12 +21,22 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Obtener la notificación activa desde la API
-      const response = await fetch('/api/notifications/current', {
-        credentials: 'include'
-      });
+      let response;
+      try {
+        response = await fetch('/api/notifications', {
+          credentials: 'include'
+        });
+      } catch (error) {
+        console.error('Error de red al obtener notificación:', error);
+        return;
+      }
       
       if (!response.ok) {
-        console.error('Error al obtener notificación:', response.statusText);
+        if (response.status === 401) {
+          console.log('Usuario no autenticado');
+          return;
+        }
+        console.error('Error al obtener notificación:', await response.text());
         return;
       }
       
@@ -38,18 +48,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (data.notification) {
         const notification = data.notification;
         
-        // Verificar si la notificación ya ha sido vista por el usuario actual
-        const viewResponse = await fetch(`/api/notifications/viewed/check/${notification.id}`, {
-          credentials: 'include'
-        });
-        
-        if (!viewResponse.ok) {
-          console.error('Error al verificar vista:', viewResponse.statusText);
-          return;
-        }
-        
-        const viewData = await viewResponse.json();
-        const isViewed = viewData.viewed;
+        // Usar hasBeenViewed del endpoint
+        const isViewed = notification.hasBeenViewed;
         
         // Crear la notificación con botón para marcar como vista
         container.innerHTML = `
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (markAsViewedBtn) {
           markAsViewedBtn.addEventListener('click', async function() {
             try {
-              const response = await fetch('/api/notifications/viewed', {
+              const response = await fetch('/api/notifications', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json'
@@ -96,13 +96,15 @@ document.addEventListener('DOMContentLoaded', function() {
               });
               
               if (!response.ok) {
-                throw new Error('Error al marcar como vista');
+                const errorText = await response.text();
+                console.error('Error al marcar como vista:', errorText);
+                return;
               }
               
               // Actualizar la interfaz
               updateNotificationDisplay();
             } catch (error) {
-              console.error('Error al marcar notificación como vista:', error);
+              console.error('Error de red al marcar notificación como vista:', error);
             }
           });
         }
