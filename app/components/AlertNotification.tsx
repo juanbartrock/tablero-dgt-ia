@@ -67,7 +67,20 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
     
     try {
       console.log('AlertNotification: Marcando notificación como vista:', currentNotification.id);
-      await markNotificationAsViewed(currentNotification.id, user.id);
+      
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notificationId: currentNotification.id }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al marcar como vista');
+      }
+
       await loadNotification();
     } catch (error) {
       console.error('Error al marcar notificación como vista:', error);
@@ -80,7 +93,16 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
     
     try {
       console.log('AlertNotification: Desactivando notificación:', currentNotification.id);
-      await clearImportantNotification(currentNotification.id);
+      
+      const response = await fetch(`/api/notifications/admin?id=${currentNotification.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al desactivar notificación');
+      }
+
       await loadNotification();
     } catch (error) {
       console.error('Error al desactivar notificación:', error);
