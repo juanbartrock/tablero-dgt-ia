@@ -75,8 +75,20 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
     
     try {
       console.log('AlertNotification: Marcando notificación como vista:', currentNotification.id);
-      await markNotificationAsViewed(currentNotification.id, user.id);
       
+      const response = await fetch('/api/notifications/viewed', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationId: currentNotification.id }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al marcar la notificación como vista');
+      }
+
       // Recargar la notificación para obtener el estado actualizado
       await loadNotification();
     } catch (error) {
@@ -90,10 +102,18 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
     
     try {
       console.log('AlertNotification: Eliminando notificación:', currentNotification.id);
-      await clearImportantNotification(currentNotification.id);
       
-      // Actualizar estado local
-      setCurrentNotification(null);
+      const response = await fetch(`/api/notifications/admin?id=${currentNotification.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar la notificación');
+      }
+
+      // Recargar la notificación para actualizar la vista
+      await loadNotification();
     } catch (error) {
       console.error('Error al eliminar notificación:', error);
     }

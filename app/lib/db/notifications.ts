@@ -75,15 +75,14 @@ export async function setImportantNotification(
   }
 }
 
-// Borrar notificación (desactivar)
+// Borrar notificación (eliminar completamente)
 export async function clearImportantNotification(notificationId: number): Promise<void> {
   try {
-    await db.update(notifications)
-      .set({ status: 'inactive' })
+    await db.delete(notifications)
       .where(eq(notifications.id, notificationId));
   } catch (error) {
-    console.error(`Error al desactivar notificación ${notificationId}:`, error);
-    throw new Error('No se pudo desactivar la notificación');
+    console.error(`Error al eliminar notificación ${notificationId}:`, error);
+    throw new Error('No se pudo eliminar la notificación');
   }
 }
 

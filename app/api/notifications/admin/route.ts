@@ -101,26 +101,42 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE: Eliminar notificación (solo administradores)
+// DELETE: Desactivar una notificación (solo admin)
 export async function DELETE(request: NextRequest) {
   try {
-    const admin = await verifyAdminAccess();
-    if (!admin) {
-      return NextResponse.json({ error: 'Acceso no autorizado' }, { status: 403 });
+    // Verificar autenticación mediante cookies
+    const cookieStore = cookies();
+    const authCookie = cookieStore.get('auth_user');
+    
+    if (!authCookie?.value) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
     
+    // Obtener datos del usuario
+    const userData = JSON.parse(authCookie.value);
+    if (!userData || !userData.id) {
+      return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 });
+    }
+    
+    // Verificar que el usuario es administrador (id = 1)
+    if (userData.id !== 1) {
+      return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
+    }
+
+    // Obtener el ID de la notificación de la URL
     const { searchParams } = new URL(request.url);
     const notificationId = searchParams.get('id');
     
     if (!notificationId) {
       return NextResponse.json({ error: 'ID de notificación requerido' }, { status: 400 });
     }
-    
+
+    // Desactivar la notificación
     await clearImportantNotification(parseInt(notificationId));
     
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error al eliminar notificación:', error);
-    return NextResponse.json({ error: 'Error al eliminar notificación' }, { status: 500 });
+    console.error('Error al desactivar notificación:', error);
+    return NextResponse.json({ error: 'Error al desactivar notificación' }, { status: 500 });
   }
 } 
