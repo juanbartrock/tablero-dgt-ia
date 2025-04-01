@@ -34,24 +34,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Obtener la notificación activa
-    const notification = await getCurrentNotification();
+    const notification = await getCurrentNotification(userData.id);
     
     // Si no hay notificación, devolver null
     if (!notification) {
       return NextResponse.json({ notification: null });
     }
     
-    // Verificar si el usuario ya ha visto esta notificación
-    const hasViewed = await hasUserViewedNotification(
-      notification.id,
-      userData.id
-    );
-    
     return NextResponse.json({
-      notification: {
-        ...notification,
-        hasBeenViewed: hasViewed
-      }
+      notification: notification
     });
   } catch (error) {
     console.error('Error al obtener notificación:', error);

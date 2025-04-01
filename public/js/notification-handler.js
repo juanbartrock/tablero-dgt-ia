@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      // Verificar si React ya está mostrando la notificación (si existe un elemento con clase bg-red-600)
+      // Verificar si React ya está mostrando la notificación
       const reactNotification = document.querySelector('div.bg-red-600.text-white.p-4.mb-6');
       if (reactNotification) {
         // Si React ya está mostrando la notificación, no hacer nada
@@ -117,9 +117,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Definir la función global para que pueda ser llamada desde cualquier parte
   window.updateNotification = updateNotificationDisplay;
 
-  // Actualizar la notificación al cargar la página
-  updateNotificationDisplay();
-  
-  // Comprobar periódicamente si hay cambios en la notificación (cada 5 segundos)
-  setInterval(updateNotificationDisplay, 5000);
+  // Esperar un momento para asegurarnos de que React haya terminado de renderizar
+  setTimeout(() => {
+    // Actualizar la notificación al cargar la página
+    updateNotificationDisplay();
+    
+    // Comprobar periódicamente si hay cambios en la notificación (cada 5 segundos)
+    setInterval(updateNotificationDisplay, 5000);
+  }, 1000);
 }); 
