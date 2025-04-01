@@ -5,37 +5,64 @@ import { db } from '@/app/lib/db/index';
 import { users } from '@/app/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
+// Middleware para verificar que el usuario está autenticado
+async function verifyAuthenticatedUser() {
+  try {
+    const cookieStore = cookies();
+    const authCookie = cookieStore.get('auth_user');
+    
+    if (!authCookie?.value) {
+      return null;
+    }
+    
+    const userData = JSON.parse(authCookie.value);
+    if (!userData || !userData.id) {
+      return null;
+    }
+    
+    const user = await db.select()
+      .from(users)
+      .where(eq(users.id, userData.id))
+      .limit(1);
+    
+    if (!user || user.length === 0) {
+      return null;
+    }
+    
+    return user[0];
+  } catch (error) {
+    console.error('Error al verificar usuario:', error);
+    return null;
+  }
+}
+
 // Middleware para verificar que el usuario es administrador
 async function verifyAdminAccess() {
-  // Verificar autenticación mediante cookies
-  const cookieStore = cookies();
-  const authCookie = cookieStore.get('auth_user');
-  
-  if (!authCookie?.value) {
+  try {
+    const user = await verifyAuthenticatedUser();
+    if (!user) {
+      return null;
+    }
+    
+    // En este ejemplo, consideramos administradores a los usuarios con username 'admin'
+    // o que tengan el ID 1 (primer usuario)
+    if (user.username === 'admin' || user.id === 1) {
+      return user;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error al verificar acceso de administrador:', error);
     return null;
   }
-  
-  // Obtener datos del usuario
-  const userData = JSON.parse(authCookie.value);
-  if (!userData || !userData.id) {
-    return null;
-  }
-  
-  // En este ejemplo, consideramos al usuario con id=1 como administrador
-  // En un sistema real, deberías verificar un rol de administrador en la base de datos
-  if (userData.id !== 1 && userData.username !== 'admin') {
-    return null;
-  }
-  
-  return userData;
 }
 
 // GET: Obtener historial de notificaciones
 export async function GET(request: NextRequest) {
   try {
-    const admin = await verifyAdminAccess();
-    if (!admin) {
-      return NextResponse.json({ error: 'Acceso no autorizado' }, { status: 403 });
+    const user = await verifyAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
     
     const notifications = await getNotificationHistory();
@@ -49,9 +76,9 @@ export async function GET(request: NextRequest) {
 // POST: Crear nueva notificación
 export async function POST(request: NextRequest) {
   try {
-    const admin = await verifyAdminAccess();
-    if (!admin) {
-      return NextResponse.json({ error: 'Acceso no autorizado' }, { status: 403 });
+    const user = await verifyAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
     
     const body = await request.json();
@@ -63,8 +90,8 @@ export async function POST(request: NextRequest) {
     
     const notification = await setImportantNotification(
       message,
-      admin.id,
-      admin.name
+      user.id,
+      user.name
     );
     
     return NextResponse.json({ success: true, notification });
@@ -74,7 +101,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE: Eliminar notificación
+// DELETE: Eliminar notificación (solo administradores)
 export async function DELETE(request: NextRequest) {
   try {
     const admin = await verifyAdminAccess();
