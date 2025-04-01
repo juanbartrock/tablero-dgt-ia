@@ -1,4 +1,4 @@
-import { db } from '.';
+import { db } from './index';
 import { notifications, notificationViews } from './schema';
 import { sql } from '@vercel/postgres';
 import { eq, and } from 'drizzle-orm';
