@@ -76,7 +76,7 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
         message: currentNotification.message
       });
       
-      const response = await fetch('/api/notifications', {
+      const response = await fetch('/api/notifications/viewed', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
