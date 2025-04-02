@@ -76,42 +76,32 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
   
   // Marcar como vista
   const handleMarkAsViewed = async () => {
-    if (!currentNotification || !user) return;
+    if (!currentNotification?.id || !user?.id) return;
     
     try {
-      console.log('Iniciando proceso de marcar como vista:', {
-        notificationId: currentNotification.id,
-        userId: user.id,
-        message: currentNotification.message
-      });
-      
+      // 1. Marcar como vista en la base de datos
       const response = await fetch('/api/notifications/viewed', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
-          notificationId: currentNotification.id 
+          notificationId: currentNotification.id,
+          userId: user.id 
         }),
-        credentials: 'include'
+        credentials: 'include'  // Importante: necesario para enviar cookies de autenticación
       });
 
-      const responseData = await response.json();
-      console.log('Respuesta del servidor:', responseData);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
         throw new Error('Error al marcar como vista');
       }
 
-      console.log('Notificación marcada como vista exitosamente');
-      // Recargar la notificación para asegurar que tenemos el estado más reciente
+      // 2. Recargar la notificación para obtener el estado actualizado
       await loadNotification();
-      console.log('Notificación recargada');
+
     } catch (error) {
-      console.error('Error detallado al marcar notificación como vista:', error);
-      alert('No se pudo marcar la notificación como vista. Por favor, intenta de nuevo.');
+      console.error('Error:', error);
+      alert('No se pudo marcar la notificación como vista');
     }
   };
   
