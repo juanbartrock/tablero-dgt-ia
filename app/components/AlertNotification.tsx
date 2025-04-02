@@ -25,7 +25,7 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
   // Cargar la notificación actual
   const loadNotification = async () => {
     try {
-      const response = await fetch('/api/notifications', {
+      const response = await fetch('/api/notifications/current', {
         credentials: 'include'
       });
 
@@ -38,7 +38,15 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
       }
 
       const data = await response.json();
-      setCurrentNotification(data.notification);
+      if (data.notification) {
+        setCurrentNotification({
+          ...data.notification,
+          timestamp: new Date(data.notification.timestamp),
+          hasBeenViewed: data.notification.viewed || false
+        });
+      } else {
+        setCurrentNotification(null);
+      }
     } catch (error) {
       console.error('Error al cargar la notificación:', error);
       setCurrentNotification(null);
@@ -71,8 +79,9 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
     if (!currentNotification || !user) return;
     
     try {
-      console.log('Intentando marcar como vista la notificación:', {
-        id: currentNotification.id,
+      console.log('Iniciando proceso de marcar como vista:', {
+        notificationId: currentNotification.id,
+        userId: user.id,
         message: currentNotification.message
       });
       
@@ -87,16 +96,21 @@ export default function AlertNotification({ message }: AlertNotificationProps) {
         credentials: 'include'
       });
 
+      const responseData = await response.json();
+      console.log('Respuesta del servidor:', responseData);
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response:', errorText);
         throw new Error('Error al marcar como vista');
       }
 
+      console.log('Notificación marcada como vista exitosamente');
       // Recargar la notificación para asegurar que tenemos el estado más reciente
       await loadNotification();
+      console.log('Notificación recargada');
     } catch (error) {
-      console.error('Error al marcar notificación como vista:', error);
+      console.error('Error detallado al marcar notificación como vista:', error);
       alert('No se pudo marcar la notificación como vista. Por favor, intenta de nuevo.');
     }
   };
