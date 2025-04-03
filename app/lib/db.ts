@@ -22,7 +22,8 @@ function mapRowToTask(row: any): Task {
     priority: row.priority,
     highlighted: row.highlighted,
     comment: row.comment,
-    // Podríamos añadir created_at y updated_at al tipo Task si son necesarios en el frontend
+    fileUrl: row.file_url,
+    fileName: row.file_name
   };
 }
 
@@ -82,12 +83,15 @@ export async function createTask(taskData: Omit<Task, 'id'>): Promise<Task> {
       importantDate,    // Usar camelCase
       priority = 'Media', 
       highlighted = false, 
-      comment 
+      comment,
+      fileUrl,
+      fileName
   } = taskData;
 
   console.log('🔍 db.ts - createTask: Creando tarea con datos:', {
     description, status, responsible, linkedAreas, 
-    importantDate, priority, highlighted, comment
+    importantDate, priority, highlighted, comment,
+    fileUrl, fileName
   });
 
   // Convertir a snake_case para la DB y asegurar null para fecha inválida
@@ -98,11 +102,11 @@ export async function createTask(taskData: Omit<Task, 'id'>): Promise<Task> {
   try {
     const result = await query(
       // Usar nombres snake_case de las columnas de la DB aquí
-      `INSERT INTO tasks (description, status, responsible, linked_areas, important_date, priority, highlighted, comment)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO tasks (description, status, responsible, linked_areas, important_date, priority, highlighted, comment, file_url, file_name)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`, 
       // Pasar los valores correspondientes (linkedAreas necesita ir como array)
-      [description, status, responsible, linkedAreas, dbImportantDate, priority, highlighted, comment]
+      [description, status, responsible, linkedAreas, dbImportantDate, priority, highlighted, comment, fileUrl, fileName]
     );
     
     if (result.rows.length > 0) {
