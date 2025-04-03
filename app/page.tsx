@@ -426,6 +426,8 @@ export default function Home() {
     }
   ];
   
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  
   return (
     <ProtectedRoute>
       <div className="bg-gray-100 min-h-screen">
@@ -447,28 +449,46 @@ export default function Home() {
               <span className="mr-1">🔔</span> Notificación
             </button>
             {user && (
-              <>
-                {user.username === 'admin' && (
-                  <a
-                    href="/admin"
-                    className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600"
-                  >
-                    Panel Admin
-                  </a>
-                )}
-                <button
-                  onClick={() => setShowPasswordModal(true)}
-                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Cambiar contraseña
-                </button>
+              <div className="relative">
                 <button 
-                  onClick={handleLogout}
-                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
-                  Cerrar sesión
+                  <span className="mr-1">👤</span> {user.username} <span className="ml-1">▼</span>
                 </button>
-              </>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                    <div className="py-1">
+                      {user.username === 'admin' && (
+                        <a
+                          href="/admin"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                        >
+                          Panel Admin
+                        </a>
+                      )}
+                      <button
+                        onClick={() => {
+                          setShowPasswordModal(true);
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                      >
+                        Cambiar contraseña
+                      </button>
+                      <button 
+                        onClick={() => {
+                          handleLogout();
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                      >
+                        Cerrar sesión
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
