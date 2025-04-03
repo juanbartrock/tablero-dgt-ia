@@ -460,10 +460,10 @@ export default function Home() {
             {/* KPIs en fila */}
             <div className="grid grid-cols-4 gap-4 mb-6">
               <DirectKPI
-                title="Total"
-                value={taskCounts['Pendiente'] + taskCounts['En Progreso'] + taskCounts['Bloqueada'] + taskCounts['Terminada']}
+                title="Total Activas"
+                value={taskCounts['Pendiente'] + taskCounts['En Progreso'] + taskCounts['Bloqueada']}
                 color="info"
-                onClick={() => showTasksByKPI("Total", allTasks)}
+                onClick={() => showTasksByKPI("Total Activas", allTasks.filter(task => task.status !== 'Terminada'))}
               />
               <DirectKPI
                 title="Pendientes"
