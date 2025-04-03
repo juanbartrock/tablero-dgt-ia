@@ -39,14 +39,16 @@ export async function POST(request: Request) {
 
     // Obtener la URL firmada del archivo
     const signedUrlResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/st-tablero-dgt-ia/${filePath}?expiresIn=31536000`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/st-tablero-dgt-ia/${filePath}`,
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({})
+        body: JSON.stringify({
+          expiresIn: 31536000
+        })
       }
     );
 
@@ -56,8 +58,6 @@ export async function POST(request: Request) {
     }
 
     const { signedURL } = await signedUrlResponse.json();
-
-    console.log('URL firmada generada:', signedURL);
 
     return NextResponse.json({
       url: signedURL,
