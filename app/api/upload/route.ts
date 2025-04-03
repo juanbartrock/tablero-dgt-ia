@@ -45,7 +45,8 @@ export async function POST(request: Request) {
         headers: {
           'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({})
       }
     );
 
@@ -55,6 +56,8 @@ export async function POST(request: Request) {
     }
 
     const { signedURL } = await signedUrlResponse.json();
+
+    console.log('URL firmada generada:', signedURL);
 
     return NextResponse.json({
       url: signedURL,
