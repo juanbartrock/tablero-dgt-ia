@@ -468,6 +468,12 @@ export default function Home() {
                 onClick={() => showTasksByKPI("Detenidas", blockedTasks)}
               />
             </div>
+            
+            {/* Grilla de Tareas Destacadas */}
+            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl shadow-md p-6">
+              <h2 className="text-xl font-bold mb-4 text-yellow-800">Tareas destacadas</h2>
+              <DirectHighlighted tasks={highlightedTasks} />
+            </div>
           </div>
           
           {/* Sección de pestañas */}
