@@ -58,6 +58,11 @@ export default function Home() {
   const [newNotification, setNewNotification] = useState('');
   const [notificationSuccess, setNotificationSuccess] = useState<string | null>(null);
   
+  // Estado para el modal de KPI
+  const [showKpiModal, setShowKpiModal] = useState(false);
+  const [kpiTitle, setKpiTitle] = useState('');
+  const [kpiTasks, setKpiTasks] = useState<Task[]>([]);
+  
   // Referencia al contenedor de pestañas
   const tabsSectionRef = useRef<HTMLDivElement>(null);
   
@@ -194,6 +199,13 @@ export default function Home() {
         setIsScrolling(false);
       }
     }, 100);
+  };
+
+  // Mostrar modal con tareas según KPI
+  const showTasksByKPI = (title: string, tasks: Task[]) => {
+    setKpiTitle(title);
+    setKpiTasks(tasks);
+    setShowKpiModal(true);
   };
 
   // Manejar cierre de sesión
@@ -519,25 +531,25 @@ export default function Home() {
                 title="Total"
                 value={taskCounts['Pendiente'] + taskCounts['En Progreso'] + taskCounts['Bloqueada'] + taskCounts['Terminada']}
                 color="info"
-                onClick={() => navigateToSection('task-manager')}
+                onClick={() => showTasksByKPI("Total", allTasks)}
               />
               <DirectKPI
                 title="Pendientes"
                 value={taskCounts['Pendiente']}
                 color="warning"
-                onClick={() => navigateToSection('pending')}
+                onClick={() => showTasksByKPI("Pendientes", pendingTasks)}
               />
               <DirectKPI
                 title="En Progreso"
                 value={taskCounts['En Progreso']}
                 color="info"
-                onClick={() => navigateToSection('in-progress')}
+                onClick={() => showTasksByKPI("En Progreso", inProgressTasks)}
               />
               <DirectKPI
                 title="Detenidas"
                 value={taskCounts['Bloqueada']}
                 color="error"
-                onClick={() => navigateToSection('blocked')}
+                onClick={() => showTasksByKPI("Detenidas", blockedTasks)}
               />
             </div>
             
@@ -658,6 +670,84 @@ export default function Home() {
                   className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
                 >
                   Guardar notificación
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Modal para tareas por KPI */}
+        {showKpiModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-4/5 max-w-4xl max-h-[80vh] overflow-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Tareas: {kpiTitle} ({kpiTasks.length})</h2>
+                <button 
+                  onClick={() => setShowKpiModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+              
+              {kpiTasks.length > 0 ? (
+                <div className="overflow-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Descripción
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Responsable
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estado
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Fecha Importante
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {kpiTasks.map(task => (
+                        <tr key={String(task.id)}>
+                          <td className="px-6 py-4 whitespace-normal">
+                            <div className="text-sm font-medium text-gray-900">{task.description}</div>
+                            {task.comment && (
+                              <div className="text-xs text-gray-500">{task.comment}</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{task.responsible}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${task.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' : 
+                                task.status === 'En Progreso' ? 'bg-blue-100 text-blue-800' : 
+                                task.status === 'Bloqueada' ? 'bg-red-100 text-red-800' : 
+                                'bg-green-100 text-green-800'}`}>
+                              {task.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {task.importantDate || '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-center py-8 text-gray-500">No hay tareas disponibles para mostrar.</p>
+              )}
+              
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowKpiModal(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                >
+                  Cerrar
                 </button>
               </div>
             </div>
