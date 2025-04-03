@@ -9,6 +9,24 @@ interface NewHighlightedTasksListProps {
 export default function NewHighlightedTasksList({ tasks }: NewHighlightedTasksListProps) {
   console.log('Renderizando NewHighlightedTasksList con tareas:', tasks);
   
+  // Log adicional para verificar las tareas con archivos
+  console.log('Todas las tareas destacadas:', tasks.map(task => ({
+    id: task.id,
+    description: task.description,
+    fileUrl: task.fileUrl,
+    fileName: task.fileName,
+    highlighted: task.highlighted
+  })));
+  
+  tasks.forEach(task => {
+    if (task.fileUrl) {
+      console.log(`Tarea ${task.id} tiene archivo adjunto:`, {
+        fileUrl: task.fileUrl,
+        fileName: task.fileName
+      });
+    }
+  });
+  
   if (!tasks || tasks.length === 0) {
     return (
       <div className="bg-white border rounded-lg shadow-sm p-5 h-full">

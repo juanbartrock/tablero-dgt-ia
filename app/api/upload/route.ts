@@ -37,11 +37,26 @@ export async function POST(request: Request) {
       throw new Error('Error al subir el archivo');
     }
 
-    // Obtener la URL pública del archivo - Usar el formato correcto de Supabase
-    const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/st-tablero-dgt-ia/${filePath}`;
+    // Obtener la URL firmada del archivo
+    const signedUrlResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/st-tablero-dgt-ia/${filePath}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+
+    if (!signedUrlResponse.ok) {
+      console.error('Error al obtener la URL firmada:', signedUrlResponse.status);
+      throw new Error('Error al obtener la URL firmada');
+    }
+
+    const { signedURL } = await signedUrlResponse.json();
 
     return NextResponse.json({
-      url: publicUrl,
+      url: signedURL,
       name: file.name
     });
 
