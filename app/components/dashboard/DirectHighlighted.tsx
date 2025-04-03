@@ -134,7 +134,10 @@ export default function DirectHighlighted({ tasks }: DirectHighlightedProps) {
                   {task.fileUrl && (
                     <div className="flex items-center gap-1">
                       <span>📎</span>
-                      <span className="text-blue-600 hover:underline cursor-pointer">
+                      <span 
+                        onClick={() => window.open(task.fileUrl, '_blank')}
+                        className="text-blue-600 hover:underline cursor-pointer"
+                      >
                         {task.fileName || 'Archivo adjunto'}
                       </span>
                     </div>

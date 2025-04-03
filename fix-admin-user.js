@@ -43,7 +43,7 @@ async function fixAdminUser() {
     `);
 
     // Generar hash de la contraseña
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const hashedPassword = await bcrypt.hash('juanbartrock', 10);
 
     if (userCheck.rows.length === 0) {
       console.log('Usuario admin no existe. Creando usuario...');
