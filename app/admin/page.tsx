@@ -80,6 +80,8 @@ export default function AdminPage() {
   const [notificationViews, setNotificationViews] = useState<NotificationView[]>([]);
   const [notificationsHistory, setNotificationsHistory] = useState<NotificationItem[]>([]);
   const [deletedNotifications, setDeletedNotifications] = useState<any[]>([]);
+  const [isAnalyzingEmails, setIsAnalyzingEmails] = useState(false);
+  const [emailAnalysisResult, setEmailAnalysisResult] = useState<string | null>(null);
   
   // Configurar actualización periódica y efecto inicial para cargar datos
   useEffect(() => {
@@ -495,6 +497,34 @@ export default function AdminPage() {
     }
   };
 
+  // Función para analizar correos
+  const handleAnalyzeEmails = async () => {
+    setIsAnalyzingEmails(true);
+    setEmailAnalysisResult(null);
+    
+    try {
+      const response = await fetch('/api/analyze-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al analizar los correos');
+      }
+      
+      const data = await response.json();
+      setEmailAnalysisResult(data.summary);
+      setSuccessMessage('Análisis de correos completado');
+    } catch (error) {
+      console.error('Error al analizar correos:', error);
+      setMessage('Error al analizar los correos. Por favor, intente nuevamente.');
+    } finally {
+      setIsAnalyzingEmails(false);
+    }
+  };
+
   return (
     <ProtectedRoute>
       <div className="container mx-auto py-6">
@@ -580,16 +610,29 @@ export default function AdminPage() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Notificación Importante</h2>
-                <button 
-                  onClick={handleDeleteAllNotifications}
-                  className="bg-red-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-700"
-                >
-                  Eliminar TODAS las notificaciones
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleAnalyzeEmails}
+                    disabled={isAnalyzingEmails}
+                    className="bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700 disabled:bg-green-300"
+                  >
+                    {isAnalyzingEmails ? 'Analizando...' : 'Analizar Correos del Día'}
+                  </button>
+                  <button 
+                    onClick={handleDeleteAllNotifications}
+                    className="bg-red-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-700"
+                  >
+                    Eliminar TODAS las notificaciones
+                  </button>
+                </div>
               </div>
-              <p className="text-gray-600 mb-4">
-                Esta notificación se mostrará en la parte superior de la aplicación para todos los usuarios.
-              </p>
+              
+              {emailAnalysisResult && (
+                <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4">
+                  <h3 className="text-lg font-medium text-blue-800 mb-2">Resumen de Correos del Día</h3>
+                  <p className="text-gray-700 whitespace-pre-line">{emailAnalysisResult}</p>
+                </div>
+              )}
               
               {currentNotification ? (
                 <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4">
