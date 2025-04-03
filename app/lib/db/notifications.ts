@@ -12,6 +12,8 @@ export type Notification = {
   created_by_name: string;
   status: string;
   hasBeenViewed?: boolean;
+  createdById?: number;
+  createdByName?: string;
 };
 
 export type NotificationView = {
@@ -168,7 +170,9 @@ export async function getNotificationHistory(): Promise<Notification[]> {
       timestamp: new Date(row.timestamp),
       created_by_id: row.created_by_id,
       created_by_name: row.created_by_name || 'Sistema',
-      status: row.status
+      status: row.status,
+      createdById: row.created_by_id,
+      createdByName: row.created_by_name || 'Sistema'
     }));
   } catch (error) {
     console.error('Error al obtener historial de notificaciones:', error);

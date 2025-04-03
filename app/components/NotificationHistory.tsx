@@ -138,7 +138,7 @@ export default function NotificationHistory() {
               <div className="sm:flex">
                 <p className="flex items-center text-sm text-gray-500">
                   <span>
-                    Creada por {notification.createdByName}
+                    Creada por {notification.createdByName || notification.created_by_name || 'Sistema'}
                   </span>
                 </p>
               </div>
