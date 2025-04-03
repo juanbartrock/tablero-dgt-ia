@@ -59,9 +59,11 @@ export async function POST(request: Request) {
 
     const { signedURL } = await signedUrlResponse.json();
 
-    // Usar la URL firmada directamente como la devuelve Supabase
+    // Asegurar que usamos el dominio de Supabase
+    const fullUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/sign/st-tablero-dgt-ia/${filePath}?token=${signedURL.split('?token=')[1]}`;
+
     return NextResponse.json({
-      url: signedURL,
+      url: fullUrl,
       name: file.name
     });
 
