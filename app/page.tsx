@@ -470,8 +470,8 @@ export default function Home() {
             </div>
             
             {/* Grilla de Tareas Destacadas */}
-            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4 text-yellow-800">Tareas destacadas</h2>
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">⭐ Tareas destacadas</h2>
               <DirectHighlighted tasks={highlightedTasks} />
             </div>
           </div>

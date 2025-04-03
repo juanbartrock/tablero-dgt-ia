@@ -27,10 +27,7 @@ export default function DirectHighlighted({ tasks }: DirectHighlightedProps) {
   
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-xl p-6 shadow-lg h-full" data-testid="direct-highlighted-empty">
-        <h3 className="text-xl font-bold text-yellow-600 mb-3 flex items-center">
-          <span className="text-2xl mr-2">🌟</span> Tareas destacadas
-        </h3>
+      <div className="bg-white rounded-xl p-6 h-full" data-testid="direct-highlighted-empty">
         <div className="flex flex-col items-center justify-center h-48 text-center">
           <div className="text-5xl mb-4">📝</div>
           <p className="text-gray-500">No hay tareas destacadas actualmente.</p>
@@ -40,14 +37,10 @@ export default function DirectHighlighted({ tasks }: DirectHighlightedProps) {
   }
   
   return (
-    <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-xl p-6 shadow-lg h-full" data-testid="direct-highlighted">
-      <h3 className="text-xl font-bold text-yellow-600 mb-3 flex items-center">
-        <span className="text-2xl mr-2">🌟</span> Tareas destacadas
-      </h3>
-      
-      <ul className="divide-y divide-amber-100 space-y-0">
+    <div className="bg-white rounded-xl p-6 h-full" data-testid="direct-highlighted">
+      <ul className="divide-y divide-gray-100 space-y-0">
         {tasks.map(task => (
-          <li key={`highlighted-${task.id}`} className="py-2 group hover:bg-yellow-50 rounded-lg transition-colors duration-200 px-3 -mx-3">
+          <li key={`highlighted-${task.id}`} className="py-2 group hover:bg-gray-50 rounded-lg transition-colors duration-200 px-3 -mx-3">
             <div className="flex items-start">
               <span className="text-yellow-500 text-lg mr-2 mt-1 transform group-hover:rotate-12 transition-transform duration-200">★</span>
               <div className="flex-1 overflow-hidden">
