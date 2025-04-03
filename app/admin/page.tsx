@@ -80,7 +80,7 @@ export default function AdminPage() {
   const [notificationsHistory, setNotificationsHistory] = useState<NotificationItem[]>([]);
   const [deletedNotifications, setDeletedNotifications] = useState<any[]>([]);
   
-  // Cargar datos iniciales y configurar actualización periódica
+  // Configurar actualización periódica y efecto inicial para cargar datos
   useEffect(() => {
     const loadData = async () => {
       // Cargar todo en paralelo donde sea posible
@@ -97,20 +97,19 @@ export default function AdminPage() {
     // Configurar actualización periódica de visitas
     const visitInterval = setInterval(() => {
       loadVisits();
-    }, 10000); // Actualizar cada 10 segundos
+    }, 5000); // Actualizar cada 5 segundos
     
     // Limpiar el mensaje de éxito después de 3 segundos
+    let successTimer: NodeJS.Timeout | null = null;
     if (successMessage) {
-      const timer = setTimeout(() => {
+      successTimer = setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
-      return () => {
-        clearTimeout(timer);
-        clearInterval(visitInterval);
-      };
     }
     
+    // Limpieza al desmontar el componente
     return () => {
+      if (successTimer) clearTimeout(successTimer);
       clearInterval(visitInterval);
     };
   }, [successMessage]);
