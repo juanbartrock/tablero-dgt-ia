@@ -136,7 +136,9 @@ export async function updateTask(task: Task): Promise<Task | null> {
       importantDate,   // Usar camelCase
       priority, 
       highlighted, 
-      comment 
+      comment,
+      fileUrl,
+      fileName
   } = task;
 
   // Validar y convertir ID a número
@@ -156,11 +158,12 @@ export async function updateTask(task: Task): Promise<Task | null> {
       // Usar nombres snake_case de las columnas de la DB aquí
       `UPDATE tasks 
        SET description = $1, status = $2, responsible = $3, linked_areas = $4, 
-           important_date = $5, priority = $6, highlighted = $7, comment = $8
-       WHERE id = $9
+           important_date = $5, priority = $6, highlighted = $7, comment = $8,
+           file_url = $9, file_name = $10
+       WHERE id = $11
        RETURNING *`, 
        // Pasar los valores correspondientes (linkedAreas necesita ir como array, id como número)
-      [description, status, responsible, linkedAreas, dbImportantDate, priority, highlighted, comment, taskId]
+      [description, status, responsible, linkedAreas, dbImportantDate, priority, highlighted, comment, fileUrl, fileName, taskId]
     );
 
     if (result.rows.length > 0) {

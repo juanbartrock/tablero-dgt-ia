@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       throw new Error('Error al subir el archivo');
     }
 
-    // Obtener la URL pública del archivo
+    // Obtener la URL pública del archivo - Usar el formato correcto de Supabase
     const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/st-tablero-dgt-ia/${filePath}`;
 
     return NextResponse.json({
