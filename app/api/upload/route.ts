@@ -59,8 +59,13 @@ export async function POST(request: Request) {
 
     const { signedURL } = await signedUrlResponse.json();
 
+    // Asegurar que la URL es completa
+    const fullUrl = signedURL.startsWith('http') 
+      ? signedURL 
+      : `${process.env.NEXT_PUBLIC_SUPABASE_URL}${signedURL}`;
+
     return NextResponse.json({
-      url: signedURL,
+      url: fullUrl,
       name: file.name
     });
 
