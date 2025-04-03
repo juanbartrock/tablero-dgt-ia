@@ -523,7 +523,7 @@ export default function Home() {
           
           {/* Sección de pestañas */}
           <div id="tabs-section" ref={tabsSectionRef} className="bg-white rounded-xl shadow-md p-6 transition-colors duration-500">
-            <Tabs activeTab={activeTab} onChange={setActiveTab} tabs={tabsContent} />
+            <Tabs defaultTabId={activeTab} tabs={tabsContent} />
           </div>
           
           {/* Última actualización */}
