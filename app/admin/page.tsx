@@ -329,19 +329,34 @@ export default function AdminPage() {
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         
-        // Convertir al formato esperado por el componente
-        const formattedNotifications = sorted.map(notification => ({
-          id: notification.id,
-          message: notification.message,
-          timestamp: new Date(notification.timestamp).getTime(),
-          createdBy: notification.createdByName || 'Sistema',
-          createdAt: new Date(notification.timestamp).toISOString(),
-          createdById: notification.createdById,
-          createdByName: notification.createdByName || 'Sistema',
-          viewCount: 0 // Por ahora no tenemos esta información
-        }));
+        // Obtener estadísticas de vistas para cada notificación
+        const notificationsWithViews = [];
         
-        setNotificationsHistory(formattedNotifications);
+        for (const notification of sorted) {
+          // Consultar las vistas de esta notificación
+          const response = await fetch(`/api/notifications/stats/${notification.id}`);
+          let viewStats = { totalViews: 0, viewers: [] };
+          
+          if (response.ok) {
+            const data = await response.json();
+            viewStats = data.stats;
+          }
+          
+          // Convertir al formato esperado por el componente
+          notificationsWithViews.push({
+            id: notification.id,
+            message: notification.message,
+            timestamp: new Date(notification.timestamp).getTime(),
+            createdBy: notification.createdByName || 'Sistema',
+            createdAt: new Date(notification.timestamp).toISOString(),
+            createdById: notification.createdById,
+            createdByName: notification.createdByName || 'Sistema',
+            viewCount: viewStats.totalViews,
+            viewers: viewStats.viewers
+          });
+        }
+        
+        setNotificationsHistory(notificationsWithViews);
         
         // Encontrar la notificación activa para mostrarla como actual
         const activeNotification = sorted.find(n => n.status === 'active');
@@ -842,7 +857,6 @@ export default function AdminPage() {
                       const isActive = currentNotification?.timestamp === notification.timestamp;
                       const isDeleted = isNotificationDeleted(notification.timestamp);
                       const deletionInfo = getDeletionInfo(notification.timestamp);
-                      const views = getViewsForNotification(notification.timestamp);
                       
                       return (
                         <tr key={index} className={isActive ? 'bg-green-50' : isDeleted ? 'bg-gray-100' : ''}>
@@ -879,15 +893,15 @@ export default function AdminPage() {
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{views.length} usuarios</div>
-                            {views.length > 0 && (
+                            <div className="text-sm text-gray-900">{notification.viewCount || 0} usuarios</div>
+                            {notification.viewers && notification.viewers.length > 0 && (
                               <div className="mt-1">
                                 <details className="text-xs text-gray-500">
                                   <summary className="cursor-pointer hover:text-blue-500">Ver detalles</summary>
                                   <ul className="mt-1 pl-2 border-l-2 border-gray-200">
-                                    {views.map((view, vidx) => (
+                                    {notification.viewers.map((viewer, vidx) => (
                                       <li key={vidx} className="mb-1">
-                                        <span className="font-medium">{view.userName || view.username}</span> - {formatDate(view.viewedAt)}
+                                        <span className="font-medium">{viewer.userName}</span> - {formatDate(new Date(viewer.viewedAt).toISOString())}
                                       </li>
                                     ))}
                                   </ul>
