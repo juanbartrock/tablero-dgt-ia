@@ -48,6 +48,7 @@ interface NotificationItem {
   createdById?: number;
   createdByName?: string;
   viewCount?: number;
+  viewers?: { userId: number; userName: string; viewedAt: Date }[];
 }
 
 interface DeletedNotification {
