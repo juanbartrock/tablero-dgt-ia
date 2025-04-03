@@ -68,6 +68,7 @@ export default function AdminPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('notifications');
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [isLoadingVisits, setIsLoadingVisits] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [editingUser, setEditingUser] = useState<number | null>(null);
   const [userForm, setUserForm] = useState({ username: '', name: '', password: '' });
@@ -86,18 +87,12 @@ export default function AdminPage() {
       // Cargar todo en paralelo donde sea posible
       await Promise.all([
           loadNotification(),
-          loadVisits(),
           loadUsers(),
       ]);
       loadNotificationData(); // Esta parece depender de datos en localStorage
     };
     
     loadData();
-    
-    // Configurar actualización periódica de visitas
-    const visitInterval = setInterval(() => {
-      loadVisits();
-    }, 5000); // Actualizar cada 5 segundos
     
     // Limpiar el mensaje de éxito después de 3 segundos
     let successTimer: NodeJS.Timeout | null = null;
@@ -110,9 +105,27 @@ export default function AdminPage() {
     // Limpieza al desmontar el componente
     return () => {
       if (successTimer) clearTimeout(successTimer);
-      clearInterval(visitInterval);
     };
   }, [successMessage]);
+
+  // Efecto para cargar y actualizar visitas cuando la pestaña está activa
+  useEffect(() => {
+    let visitInterval: NodeJS.Timeout | null = null;
+
+    if (activeTab === 'visits') {
+      // Cargar visitas inmediatamente
+      loadVisits();
+
+      // Configurar actualización periódica
+      visitInterval = setInterval(loadVisits, 5000);
+    }
+
+    return () => {
+      if (visitInterval) {
+        clearInterval(visitInterval);
+      }
+    };
+  }, [activeTab]);
 
   // Cargar la notificación actual
   const loadNotification = async () => {
@@ -137,6 +150,7 @@ export default function AdminPage() {
   // Cargar las visitas
   const loadVisits = async () => {
     try {
+      setIsLoadingVisits(true);
       const response = await fetch('/api/auth/visits');
       if (!response.ok) {
         throw new Error('Error al cargar las visitas');
@@ -147,6 +161,8 @@ export default function AdminPage() {
       setVisits(data.visits);
     } catch (error) {
       console.error('Error al cargar las visitas:', error);
+    } finally {
+      setIsLoadingVisits(false);
     }
   };
   
@@ -793,44 +809,51 @@ export default function AdminPage() {
               <h2 className="text-xl font-semibold mb-4">Registro de Visitas</h2>
               
               <div className="overflow-x-auto rounded-lg border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Usuario
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nombre
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fecha y Hora
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {visits.length > 0 ? (
-                      visits.map((visit) => (
-                        <tr key={visit.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {visit.username}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {visit.userName}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {format(parseISO(visit.timestamp), 'dd/MM/yyyy HH:mm:ss', { locale: es })}
+                {isLoadingVisits ? (
+                  <div className="text-center py-4">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent align-[-0.125em]"></div>
+                    <p className="mt-2 text-gray-600">Cargando visitas...</p>
+                  </div>
+                ) : (
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Usuario
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Nombre
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Fecha y Hora
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visits.length > 0 ? (
+                        visits.map((visit) => (
+                          <tr key={visit.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {visit.username}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {visit.userName}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {format(parseISO(visit.timestamp), 'dd/MM/yyyy HH:mm:ss', { locale: es })}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
+                            No hay visitas registradas
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
-                          No hay visitas registradas
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           )}
