@@ -448,6 +448,14 @@ export default function Home() {
             </button>
             {user && (
               <>
+                {user.username === 'admin' && (
+                  <a
+                    href="/admin"
+                    className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600"
+                  >
+                    Panel Admin
+                  </a>
+                )}
                 <button
                   onClick={() => setShowPasswordModal(true)}
                   className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
