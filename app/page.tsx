@@ -427,306 +427,216 @@ export default function Home() {
   ];
   
   return (
-    <>
-      <AlertNotification />
-      
-      <ProtectedRoute>
-        <div className="bg-gradient-to-br from-blue-50 to-slate-100 rounded-lg p-6 shadow-sm">
-          {/* Dashboard */}
+    <ProtectedRoute>
+      <div className="bg-gray-100 min-h-screen">
+        {/* Barra de navegación superior */}
+        <div className="bg-white shadow-sm p-2 flex justify-between items-center border-b border-gray-200">
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold ml-2">Tablero Dirección</h1>
+          </div>
+          <div className="flex items-center space-x-3">
+            {notificationSuccess && (
+              <div className="bg-green-100 text-green-700 px-3 py-1 rounded border border-green-300">
+                {notificationSuccess}
+              </div>
+            )}
+            <button
+              onClick={() => setShowNotificationForm(true)}
+              className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 flex items-center"
+            >
+              <span className="mr-1">🔔</span> Notificación
+            </button>
+            {user && (
+              <>
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Cambiar contraseña
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Cerrar sesión
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+        
+        {/* Sección principal con layout modificado */}
+        <div className="container mx-auto py-6 px-4">
+          {/* Notificaciones */}
+          <AlertNotification />
+          <NotificationHistory />
+          
+          {/* Error de carga */}
+          {fetchError && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+              <p><strong>Error:</strong> {fetchError}</p>
+              <button 
+                onClick={() => loadData(true)} 
+                className="mt-2 px-4 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
+          
+          {/* KPIs y tareas destacadas */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1">
-                <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent drop-shadow-sm">Estado de Tareas</h1>
-                <div className="h-1 w-24 bg-gradient-to-r from-primary to-info rounded-full mt-2"></div>
-              </div>
-              <div className="flex items-center gap-4">
-                <p className="text-sm text-gray-500 bg-white px-3 py-2 rounded-md shadow-sm border border-gray-100">
-                  Última actualización: {lastUpdate ? format(parseISO(lastUpdate), "d 'de' MMMM 'de' yyyy, HH:mm", { locale: es }) : ''}
-                </p>
-                <div className="flex items-center gap-2">
-                  {user && (
-                    <div className="relative">
-                      <div 
-                        className="px-3 py-2 bg-white rounded-md shadow-sm border border-gray-100 text-sm cursor-pointer flex items-center"
-                        onClick={() => document.getElementById('userDropdown')?.classList.toggle('hidden')}
-                      >
-                        Usuario: <span className="font-medium ml-1">{user.name}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                      
-                      {/* Menú desplegable de usuario */}
-                      <div id="userDropdown" className="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 py-1">
-                        <button
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                          onClick={() => {
-                            document.getElementById('userDropdown')?.classList.add('hidden');
-                            setShowPasswordModal(true);
-                          }}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                          </svg>
-                          Cambiar contraseña
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                          onClick={() => {
-                            document.getElementById('userDropdown')?.classList.add('hidden');
-                            setShowNotificationForm(true);
-                          }}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                          </svg>
-                          Crear notificación
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <button
-                    onClick={handleLogout}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md shadow-sm text-sm font-medium transition-colors"
-                  >
-                    Cerrar Sesión
-                  </button>
-                  {user && user.username === 'admin' && (
-                    <a href="/admin" className="px-4 py-2 bg-gradient-to-r from-primary to-info text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Administración
-                    </a>
-                  )}
-                </div>
-              </div>
+            {/* KPIs en fila */}
+            <div className="grid grid-cols-4 gap-4 mb-6">
+              <DirectKPI
+                title="Total"
+                value={taskCounts['Pendiente'] + taskCounts['En Progreso'] + taskCounts['Bloqueada'] + taskCounts['Terminada']}
+                color="info"
+                onClick={() => navigateToSection('task-manager')}
+              />
+              <DirectKPI
+                title="Pendientes"
+                value={taskCounts['Pendiente']}
+                color="warning"
+                onClick={() => navigateToSection('pending')}
+              />
+              <DirectKPI
+                title="En Progreso"
+                value={taskCounts['En Progreso']}
+                color="info"
+                onClick={() => navigateToSection('in-progress')}
+              />
+              <DirectKPI
+                title="Detenidas"
+                value={taskCounts['Bloqueada']}
+                color="error"
+                onClick={() => navigateToSection('blocked')}
+              />
+            </div>
+            
+            {/* Grilla de Tareas Destacadas */}
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h2 className="text-xl font-bold mb-4">Grilla de Tareas Destacadas</h2>
+              <DirectHighlighted tasks={highlightedTasks} />
             </div>
           </div>
           
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800 flex items-center">
-              <span className="mr-2">📊</span> Panel de Control
-            </h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
-                <div className="grid grid-cols-2 gap-4 h-full">
-                  <DirectKPI 
-                    title="Total" 
-                    value={pendingTasks.length + inProgressTasks.length + blockedTasks.length} 
-                    color="success" 
-                    onClick={() => navigateToSection('task-manager')} 
-                  />
-                  <DirectKPI 
-                    title="Pendientes" 
-                    value={pendingTasks.length} 
-                    color="warning" 
-                    onClick={() => navigateToSection('pending')} 
-                  />
-                  <DirectKPI 
-                    title="En Progreso" 
-                    value={inProgressTasks.length} 
-                    color="info" 
-                    onClick={() => navigateToSection('in-progress')} 
-                  />
-                  <DirectKPI 
-                    title="Detenida" 
-                    value={blockedTasks.length} 
-                    color="error" 
-                    onClick={() => navigateToSection('blocked')} 
+          {/* Sección de pestañas */}
+          <div id="tabs-section" ref={tabsSectionRef} className="bg-white rounded-xl shadow-md p-6 transition-colors duration-500">
+            <Tabs activeTab={activeTab} onChange={setActiveTab} tabs={tabsContent} />
+          </div>
+          
+          {/* Última actualización */}
+          <div className="text-center text-sm text-gray-500 mt-4">
+            Última actualización: {lastUpdate ? format(parseISO(lastUpdate), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es }) : 'No disponible'}
+          </div>
+        </div>
+        
+        {/* Modal para cambiar contraseña */}
+        {showPasswordModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 max-w-full">
+              <h2 className="text-xl font-bold mb-4">Cambiar contraseña</h2>
+              
+              <form onSubmit={handleChangePassword}>
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Contraseña actual</label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-3 py-2 border rounded"
+                    required
                   />
                 </div>
-              </div>
+                
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Nueva contraseña</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-3 py-2 border rounded"
+                    required
+                  />
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Confirmar nueva contraseña</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-3 py-2 border rounded"
+                    required
+                  />
+                </div>
+                
+                {passwordError && (
+                  <div className="mb-4 text-red-500">{passwordError}</div>
+                )}
+                
+                {passwordSuccess && (
+                  <div className="mb-4 text-green-500">{passwordSuccess}</div>
+                )}
+                
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordModal(false)}
+                    className="px-4 py-2 text-gray-600 mr-2"
+                    disabled={isPasswordLoading}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    disabled={isPasswordLoading}
+                  >
+                    {isPasswordLoading ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        
+        {/* Modal para notificación */}
+        {showNotificationForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 max-w-full">
+              <h2 className="text-xl font-bold mb-4">Crear notificación destacada</h2>
               
-              <div className="lg:col-span-2">
-                <DirectHighlighted 
-                  tasks={allTasks.filter(task => task.highlighted)} 
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Texto de la notificación</label>
+                <textarea
+                  value={newNotification}
+                  onChange={(e) => setNewNotification(e.target.value)}
+                  className="w-full px-3 py-2 border rounded h-32"
+                  required
                 />
               </div>
+              
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowNotificationForm(false)}
+                  className="px-4 py-2 text-gray-600 mr-2"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveNotification}
+                  className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                >
+                  Guardar notificación
+                </button>
+              </div>
             </div>
           </div>
-          
-          {/* Sección de Gestión de Tareas */}
-          <div className="border-t border-blue-100 pt-6" id="tabs-section" ref={tabsSectionRef}>
-            <Tabs tabs={tabsContent} defaultTabId={activeTab} />
-          </div>
-          
-          {/* Historial de notificaciones (solo para admins) */}
-          {user && user.username === 'admin' && (
-            <div className="border-t border-blue-100 mt-8 pt-8">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800">Administración de Notificaciones</h2>
-              <div className="bg-white rounded-lg shadow-sm p-0">
-                <NotificationHistory />
-              </div>
-            </div>
-          )}
-          
-          {/* Modal para cambiar contraseña */}
-          {showPasswordModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
-                <div className="px-6 py-4 bg-gradient-to-r from-primary to-info">
-                  <h3 className="text-lg font-medium text-white">Cambiar Contraseña</h3>
-                </div>
-                
-                <div className="p-6">
-                  {passwordError && (
-                    <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 text-red-700" role="alert">
-                      <p>{passwordError}</p>
-                    </div>
-                  )}
-                  
-                  {passwordSuccess && (
-                    <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 text-green-700" role="alert">
-                      <p>{passwordSuccess}</p>
-                    </div>
-                  )}
-                  
-                  <form onSubmit={handleChangePassword}>
-                    <div className="mb-4">
-                      <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-1">
-                        Contraseña actual
-                      </label>
-                      <input
-                        id="current-password"
-                        type="password"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
-                        Nueva contraseña
-                      </label>
-                      <input
-                        id="new-password"
-                        type="password"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="mb-6">
-                      <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-                        Confirmar nueva contraseña
-                      </label>
-                      <input
-                        id="confirm-password"
-                        type="password"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                        onClick={() => {
-                          setShowPasswordModal(false);
-                          setPasswordError(null);
-                          setPasswordSuccess(null);
-                          setCurrentPassword('');
-                          setNewPassword('');
-                          setConfirmPassword('');
-                        }}
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        disabled={isPasswordLoading}
-                      >
-                        {isPasswordLoading ? 'Guardando...' : 'Cambiar Contraseña'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Modal para crear notificación */}
-          {showNotificationForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
-                <div className="px-6 py-4 bg-gradient-to-r from-red-500 to-red-600">
-                  <h3 className="text-lg font-medium text-white">Crear Notificación Importante</h3>
-                </div>
-                
-                <div className="p-6">
-                  {notificationSuccess && (
-                    <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 text-green-700" role="alert">
-                      <p>{notificationSuccess}</p>
-                    </div>
-                  )}
-                  
-                  <div className="mb-4">
-                    <label htmlFor="notification-text" className="block text-sm font-medium text-gray-700 mb-1">
-                      Mensaje de notificación
-                    </label>
-                    <textarea
-                      id="notification-text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
-                      value={newNotification}
-                      onChange={(e) => setNewNotification(e.target.value)}
-                      placeholder="Escribe el mensaje de notificación aquí..."
-                      rows={4}
-                      required
-                    />
-                    <p className="mt-2 text-sm text-gray-500">
-                      Esta notificación será visible para todos los usuarios del sistema. Se mostrará en la parte superior de la página.
-                    </p>
-                  </div>
-                  
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      type="button"
-                      className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                      onClick={() => {
-                        setShowNotificationForm(false);
-                        setNewNotification('');
-                      }}
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      onClick={handleSaveNotification}
-                      disabled={!newNotification.trim()}
-                    >
-                      Publicar Notificación
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Estilos para el destacado de secciones */}
-          <style jsx global>{`
-            @keyframes highlightFade {
-              0% { background-color: rgba(59, 130, 246, 0.1); }
-              100% { background-color: transparent; }
-            }
-            
-            .highlight-section {
-              animation: highlightFade 1s ease-out;
-            }
-          `}</style>
-        </div>
-      </ProtectedRoute>
-    </>
+        )}
+      </div>
+    </ProtectedRoute>
   );
 } 
