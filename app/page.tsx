@@ -362,7 +362,7 @@ export default function Home() {
         {/* Barra de navegación superior */}
         <div className="bg-white shadow-sm p-2 flex justify-between items-center border-b border-gray-200">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold ml-2">Tablero Dirección</h1>
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">Tablero Dirección</h1>
           </div>
           <div className="flex items-center space-x-3">
             {notificationSuccess && (
@@ -467,12 +467,6 @@ export default function Home() {
                 color="error"
                 onClick={() => showTasksByKPI("Detenidas", blockedTasks)}
               />
-            </div>
-            
-            {/* Grilla de Tareas Destacadas */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4">Grilla de Tareas Destacadas</h2>
-              <DirectHighlighted tasks={highlightedTasks} />
             </div>
           </div>
           
