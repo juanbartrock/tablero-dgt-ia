@@ -382,7 +382,7 @@ export default function Home() {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
-                  <span className="mr-1">👤</span> {user.username} <span className="ml-1">▼</span>
+                  <span className="mr-1">👤</span> {user.name} <span className="ml-1">▼</span>
                 </button>
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
@@ -392,7 +392,7 @@ export default function Home() {
                           href="/admin"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                         >
-                          Panel Admin
+                          Panel Administrador
                         </a>
                       )}
                       <button
