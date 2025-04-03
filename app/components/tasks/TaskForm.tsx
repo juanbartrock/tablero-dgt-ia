@@ -19,10 +19,14 @@ export default function TaskForm({ task, onSubmit, onCancel, isLoading }: TaskFo
     importantDate: task?.importantDate || '',
     priority: task?.priority || 'Media',
     highlighted: task?.highlighted || false,
-    comment: task?.comment || ''
+    comment: task?.comment || '',
+    fileUrl: task?.fileUrl || '',
+    fileName: task?.fileName || ''
   });
   
   const [linkedAreaInput, setLinkedAreaInput] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
@@ -52,18 +56,48 @@ export default function TaskForm({ task, onSubmit, onCancel, isLoading }: TaskFo
     }));
   };
   
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      let fileUrl = formData.fileUrl;
+      let fileName = formData.fileName;
+
+      if (file) {
+        setIsUploading(true);
+        const formDataFile = new FormData();
+        formDataFile.append('file', file);
+        
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formDataFile
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Error al subir el archivo');
+        }
+
+        const { url, name } = await uploadResponse.json();
+        fileUrl = url;
+        fileName = name;
+      }
+
       const taskToSubmit = task?.id 
-        ? { ...formData, id: task.id } 
-        : formData;
+        ? { ...formData, id: task.id, fileUrl, fileName } 
+        : { ...formData, fileUrl, fileName };
       
       console.log('Enviando tarea para guardar:', taskToSubmit);
       await onSubmit(taskToSubmit);
     } catch (error) {
       console.error('Error en el submit del formulario (TaskForm):', error);
+    } finally {
+      setIsUploading(false);
     }
   };
   
@@ -222,6 +256,27 @@ export default function TaskForm({ task, onSubmit, onCancel, isLoading }: TaskFo
             </span>
           ))}
         </div>
+      </div>
+      
+      <div className="mb-4">
+        <label htmlFor="file" className="block text-sm font-medium text-gray-700 mb-1">
+          Archivo Adjunto
+        </label>
+        <input
+          type="file"
+          id="file"
+          name="file"
+          onChange={handleFileChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {formData.fileUrl && (
+          <div className="mt-2 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm text-gray-600">{formData.fileName}</span>
+          </div>
+        )}
       </div>
       
       <div className="flex justify-end gap-2 mt-6">

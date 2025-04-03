@@ -92,6 +92,7 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Áreas Vinculadas</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Responsable(s)</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Destacada</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Archivo Adjunto</th>
               {(onEdit || onDelete) && (
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               )}
@@ -100,13 +101,13 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
           <tbody className="bg-white divide-y divide-gray-200">
             {currentTasks.length === 0 && !isLoading ? (
               <tr>
-                <td colSpan={onEdit || onDelete ? 10 : 9} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={onEdit || onDelete ? 11 : 10} className="px-6 py-4 text-center text-sm text-gray-500">
                   No hay tareas para mostrar.
                 </td>
               </tr>
             ) : isLoading ? (
               <tr>
-                <td colSpan={onEdit || onDelete ? 10 : 9} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={onEdit || onDelete ? 11 : 10} className="px-6 py-4 text-center text-sm text-gray-500">
                   Cargando...
                 </td>
               </tr>
@@ -157,6 +158,19 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
                       <span className="text-yellow-500 text-lg">★</span>
                     ) : (
                       <span className="text-gray-300 text-lg">☆</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    {task.fileUrl && (
+                      <button
+                        onClick={() => window.open(task.fileUrl, '_blank')}
+                        className="text-gray-500 hover:text-blue-500 transition-colors"
+                        title="Descargar archivo adjunto"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
+                        </svg>
+                      </button>
                     )}
                   </td>
                   {(onEdit || onDelete) && (

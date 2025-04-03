@@ -11,4 +11,6 @@ export interface Task {
   priority: TaskPriority;   // Nivel de prioridad
   highlighted?: boolean;    // Indica si la tarea está destacada
   comment?: string;         // Comentario o notas adicionales sobre la tarea
+  fileUrl?: string;         // URL del archivo adjunto en Supabase Storage
+  fileName?: string;        // Nombre original del archivo
 } 
