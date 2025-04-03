@@ -334,10 +334,10 @@ export default function AdminPage() {
           id: notification.id,
           message: notification.message,
           timestamp: new Date(notification.timestamp).getTime(),
-          createdBy: notification.createdByName || notification.created_by_name || 'Sistema',
+          createdBy: notification.createdByName || 'Sistema',
           createdAt: new Date(notification.timestamp).toISOString(),
-          createdById: notification.createdById || notification.created_by_id,
-          createdByName: notification.createdByName || notification.created_by_name || 'Sistema',
+          createdById: notification.createdById,
+          createdByName: notification.createdByName || 'Sistema',
           viewCount: 0 // Por ahora no tenemos esta información
         }));
         
@@ -351,10 +351,10 @@ export default function AdminPage() {
             id: activeNotification.id,
             message: activeNotification.message,
             timestamp: new Date(activeNotification.timestamp).getTime(),
-            createdBy: activeNotification.createdByName || activeNotification.created_by_name || 'Sistema',
+            createdBy: activeNotification.createdByName || 'Sistema',
             createdAt: new Date(activeNotification.timestamp).toISOString(),
-            createdById: activeNotification.createdById || activeNotification.created_by_id,
-            createdByName: activeNotification.createdByName || activeNotification.created_by_name || 'Sistema',
+            createdById: activeNotification.createdById,
+            createdByName: activeNotification.createdByName || 'Sistema',
             viewCount: 0 // Por ahora no tenemos esta información
           });
         } else {
