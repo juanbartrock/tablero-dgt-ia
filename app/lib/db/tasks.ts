@@ -16,6 +16,8 @@ export type Task = {
   comment?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
+  fileUrl?: string | null;
+  fileName?: string | null;
 };
 
 // Obtener todas las tareas
@@ -114,7 +116,9 @@ export async function createTask(task: Omit<Task, 'id'>): Promise<Task> {
       importantDate: task.importantDate || '',
       priority: task.priority || 'Media',
       highlighted: !!task.highlighted,
-      comment: task.comment || ''
+      comment: task.comment || '',
+      fileUrl: task.fileUrl || null,
+      fileName: task.fileName || null
     }).returning();
     
     return result[0];
@@ -137,6 +141,8 @@ export async function updateTask(task: Task): Promise<void> {
         priority: task.priority,
         highlighted: !!task.highlighted,
         comment: task.comment || '',
+        fileUrl: task.fileUrl || null,
+        fileName: task.fileName || null,
         updatedAt: new Date()
       })
       .where(eq(tasks.id, task.id));

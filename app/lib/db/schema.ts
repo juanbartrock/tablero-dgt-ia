@@ -20,6 +20,8 @@ export const tasks = pgTable('tasks', {
   priority: varchar('priority', { length: 20 }).notNull().default('Media'),
   highlighted: boolean('highlighted').default(false),
   comment: text('comment'),
+  fileUrl: varchar('file_url', { length: 255 }),
+  fileName: varchar('file_name', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });

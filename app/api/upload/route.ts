@@ -17,22 +17,23 @@ export async function POST(request: Request) {
     const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `task-files/${fileName}`;
 
-    // Convertir el archivo a base64
+    // Obtener el buffer del archivo
     const buffer = await file.arrayBuffer();
-    const base64File = Buffer.from(buffer).toString('base64');
 
     // Subir el archivo a Supabase Storage usando fetch
     const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/st-tablero-dgt-ia/${filePath}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/octet-stream',
+        'Content-Type': file.type,
         'x-upsert': 'true'
       },
-      body: base64File
+      body: buffer
     });
 
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error al subir el archivo:', errorData);
       throw new Error('Error al subir el archivo');
     }
 
