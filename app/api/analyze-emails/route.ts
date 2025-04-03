@@ -16,13 +16,13 @@ const imapConfig = {
   tlsOptions: { rejectUnauthorized: false }
 };
 
-export async function POST() {
+export async function POST(): Promise<Response> {
   try {
     const imap = new Imap(imapConfig);
     
-    return new Promise((resolve, reject) => {
+    return new Promise<Response>((resolve, reject) => {
       imap.once('ready', () => {
-        imap.openBox('INBOX', false, (err, box) => {
+        imap.openBox('INBOX', false, (err: Error | null, box: any) => {
           if (err) {
             imap.end();
             reject(new Error('Error al abrir el buzón'));
@@ -34,7 +34,7 @@ export async function POST() {
           today.setHours(0, 0, 0, 0);
           const searchCriteria = ['SINCE', today];
           
-          imap.search(searchCriteria, (err, results) => {
+          imap.search(searchCriteria, (err: Error | null, results: number[]) => {
             if (err) {
               imap.end();
               reject(new Error('Error al buscar correos'));
@@ -50,12 +50,12 @@ export async function POST() {
             const emails: any[] = [];
             let processed = 0;
 
-            results.forEach((uid) => {
+            results.forEach((uid: number) => {
               const fetch = imap.fetch(uid, { bodies: '' });
               
-              fetch.on('message', (msg) => {
-                msg.on('body', (stream) => {
-                  simpleParser(stream, async (err, parsed) => {
+              fetch.on('message', (msg: any) => {
+                msg.on('body', (stream: any) => {
+                  simpleParser(stream, async (err: Error | null, parsed: any) => {
                     if (err) {
                       console.error('Error al parsear correo:', err);
                       return;
@@ -102,7 +102,7 @@ export async function POST() {
         });
       });
 
-      imap.once('error', (err) => {
+      imap.once('error', (err: Error) => {
         reject(new Error('Error de conexión IMAP'));
       });
 
