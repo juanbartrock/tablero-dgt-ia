@@ -73,17 +73,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        setError(data.message || 'Error de autenticación');
-        return false;
+        throw new Error('Error en la autenticación');
       }
 
+      const data = await response.json();
       setUser(data.user);
+      
+      // Disparar evento de nuevo login
+      localStorage.setItem('lastLogin', new Date().toISOString());
+      
       return true;
-    } catch (err) {
-      console.error('Error en login:', err);
+    } catch (error) {
+      console.error('Error durante el login:', error);
       setError('Error al conectar con el servidor');
       return false;
     } finally {

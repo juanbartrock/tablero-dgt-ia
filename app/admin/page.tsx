@@ -108,22 +108,27 @@ export default function AdminPage() {
     };
   }, [successMessage]);
 
-  // Efecto para cargar y actualizar visitas cuando la pestaña está activa
+  // Efecto para cargar visitas cuando la pestaña está activa
   useEffect(() => {
-    let visitInterval: NodeJS.Timeout | null = null;
-
     if (activeTab === 'visits') {
-      // Cargar visitas inmediatamente
+      // Cargar visitas solo cuando se active la pestaña
       loadVisits();
-
-      // Configurar actualización periódica
-      visitInterval = setInterval(loadVisits, 5000);
     }
+  }, [activeTab]);
+
+  // Efecto para escuchar eventos de nuevo ingreso
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'lastLogin' && activeTab === 'visits') {
+        console.log('Nuevo ingreso detectado, actualizando visitas...');
+        loadVisits();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      if (visitInterval) {
-        clearInterval(visitInterval);
-      }
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [activeTab]);
 
