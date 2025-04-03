@@ -7,6 +7,7 @@ import StatusChart from './components/dashboard/StatusChart';
 import UpcomingTasksList from './components/dashboard/UpcomingTasksList';
 import DirectHighlighted from './components/dashboard/DirectHighlighted';
 import TaskManager from './components/tasks/TaskManager';
+import CalendarContainer from './components/calendar/CalendarContainer';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Task } from './lib/types';
@@ -65,6 +66,9 @@ export default function Home() {
   
   // Referencia al contenedor de pestañas
   const tabsSectionRef = useRef<HTMLDivElement>(null);
+  
+  // Estado para el modal del calendario
+  const [showCalendar, setShowCalendar] = useState(false);
   
   // Cargar datos usando fetch
   const loadData = async (forceCacheBypass = false) => {
@@ -418,6 +422,16 @@ export default function Home() {
                 )}
               </div>
             )}
+            {/* Botón del Calendario */}
+            <button
+              onClick={() => setShowCalendar(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Calendario
+            </button>
           </div>
         </div>
         
@@ -666,6 +680,26 @@ export default function Home() {
                   Cerrar
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Modal del Calendario */}
+        {showCalendar && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-7xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Calendario de Tareas</h2>
+                <button
+                  onClick={() => setShowCalendar(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <CalendarContainer tasks={allTasks} />
             </div>
           </div>
         )}
