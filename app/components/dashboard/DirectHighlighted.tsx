@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import * as React from 'react';
 import { Task } from '../../lib/types';
 
 interface DirectHighlightedProps {
@@ -41,28 +41,28 @@ export default function DirectHighlighted({ tasks }: DirectHighlightedProps) {
   
   return (
     <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-xl p-6 shadow-lg h-full" data-testid="direct-highlighted">
-      <h3 className="text-xl font-bold text-yellow-600 mb-4 flex items-center">
+      <h3 className="text-xl font-bold text-yellow-600 mb-3 flex items-center">
         <span className="text-2xl mr-2">🌟</span> Tareas destacadas
       </h3>
       
-      <ul className="divide-y divide-amber-100 space-y-1">
+      <ul className="divide-y divide-amber-100 space-y-0">
         {tasks.map(task => (
-          <li key={`highlighted-${task.id}`} className="py-3 group hover:bg-yellow-50 rounded-lg transition-colors duration-200 px-3 -mx-3">
+          <li key={`highlighted-${task.id}`} className="py-2 group hover:bg-yellow-50 rounded-lg transition-colors duration-200 px-3 -mx-3">
             <div className="flex items-start">
-              <span className="text-yellow-500 text-xl mr-3 mt-1 transform group-hover:rotate-12 transition-transform duration-200">★</span>
+              <span className="text-yellow-500 text-lg mr-2 mt-1 transform group-hover:rotate-12 transition-transform duration-200">★</span>
               <div className="flex-1 overflow-hidden">
                 <div className="flex items-start justify-between">
-                  <p className="font-semibold text-gray-900 truncate">{task.description}</p>
-                  <span className={`ml-2 px-3 py-1 text-xs rounded-full ${getStatusColor(task.status)}`}>
+                  <p className="font-semibold text-gray-900 truncate text-sm">{task.description}</p>
+                  <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${getStatusColor(task.status)}`}>
                     {task.status}
                   </span>
                 </div>
                 
                 {task.comment && (
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">{task.comment}</p>
+                  <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">{task.comment}</p>
                 )}
                 
-                <div className="flex items-center mt-2 text-xs text-gray-500">
+                <div className="flex items-center mt-1 text-xs text-gray-500">
                   <div className="flex items-center">
                     <span className="mr-1">👤</span>
                     <span className="font-medium">{task.responsible}</span>

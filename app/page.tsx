@@ -469,7 +469,6 @@ export default function Home() {
         <div className="container mx-auto py-6 px-4">
           {/* Notificaciones */}
           <AlertNotification />
-          <NotificationHistory />
           
           {/* Error de carga */}
           {fetchError && (
