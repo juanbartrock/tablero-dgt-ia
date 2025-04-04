@@ -12,13 +12,13 @@ const imapConfig = {
   password: process.env.ZIMBRA_PASSWORD || '',
   host: process.env.ZIMBRA_HOST || '',
   port: parseInt(process.env.ZIMBRA_PORT || '993'),
-  tls: true,
+  tls: false,
+  ssl: true,
   tlsOptions: { 
-    rejectUnauthorized: false,
-    secureProtocol: 'TLSv1_method'
+    rejectUnauthorized: false
   },
-  connTimeout: 30000,
-  authTimeout: 30000,
+  connTimeout: 60000, // 60 segundos
+  authTimeout: 60000, // 60 segundos
   debug: function(info: any) {
     console.log('Debug IMAP:', info);
   }
@@ -133,7 +133,18 @@ export async function POST(): Promise<Response> {
       });
 
       imap.once('error', (err: Error) => {
-        console.error('Error detallado de conexión IMAP:', err.message, err.stack);
+        console.error('Error detallado de conexión IMAP:', {
+          message: err.message,
+          stack: err.stack,
+          name: err.name,
+          connectionDetails: {
+            host: imapConfig.host,
+            port: imapConfig.port,
+            user: imapConfig.user,
+            ssl: imapConfig.ssl,
+            tls: imapConfig.tls
+          }
+        });
         reject(new Error(`Error de conexión IMAP: ${err.message}`));
       });
 
@@ -142,9 +153,19 @@ export async function POST(): Promise<Response> {
       });
 
       try {
+        console.log('Ejecutando imap.connect()...');
         imap.connect();
+        console.log('imap.connect() ejecutado sin errores');
       } catch (err) {
-        console.error('Error al intentar conectar con IMAP:', err);
+        console.error('Error al intentar conectar con IMAP:', {
+          error: err instanceof Error ? { message: err.message, stack: err.stack } : String(err),
+          config: {
+            host: imapConfig.host,
+            port: imapConfig.port,
+            ssl: imapConfig.ssl,
+            tls: imapConfig.tls
+          }
+        });
         reject(new Error(`Error al intentar conectar: ${err instanceof Error ? err.message : String(err)}`));
       }
     });
