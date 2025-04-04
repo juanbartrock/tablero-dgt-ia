@@ -14,7 +14,8 @@ const imapConfig = {
   port: parseInt(process.env.ZIMBRA_PORT || '993'),
   tls: true,
   tlsOptions: { 
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
+    servername: 'mail.pjn.gov.ar'
   },
   connTimeout: 30000,
   authTimeout: 30000,
@@ -22,7 +23,8 @@ const imapConfig = {
     console.log('Debug IMAP:', info);
   },
   retries: 3,
-  retryDelay: 5000
+  retryDelay: 5000,
+  socketTimeout: 30000
 };
 
 export async function POST(): Promise<Response> {
@@ -42,11 +44,34 @@ export async function POST(): Promise<Response> {
       );
     }
     
+    // Verificar conectividad antes de intentar la conexión IMAP
+    try {
+      const dns = require('dns');
+      await new Promise((resolve, reject) => {
+        dns.lookup('mail.pjn.gov.ar', (err: any, address: string) => {
+          if (err) {
+            console.error('Error de resolución DNS:', err);
+            reject(err);
+          } else {
+            console.log('Resolución DNS exitosa:', address);
+            resolve(address);
+          }
+        });
+      });
+    } catch (dnsError) {
+      console.error('Error al resolver el host:', dnsError);
+      return NextResponse.json(
+        { error: 'No se puede resolver el host del servidor IMAP' },
+        { status: 500 }
+      );
+    }
+    
     console.log('Intentando conexión IMAP con:', {
       host: imapConfig.host,
       port: imapConfig.port,
       user: imapConfig.user,
-      tls: imapConfig.tls
+      tls: imapConfig.tls,
+      tlsOptions: imapConfig.tlsOptions
     });
 
     const imap = new Imap(imapConfig);
