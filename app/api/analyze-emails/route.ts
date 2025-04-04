@@ -19,7 +19,7 @@ const imapConfig = {
   },
   connTimeout: 30000,
   authTimeout: 30000,
-  debug: function(info) {
+  debug: function(info: any) {
     console.log('Debug IMAP:', info);
   }
 };
