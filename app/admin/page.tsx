@@ -510,16 +510,17 @@ export default function AdminPage() {
         },
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Error al analizar los correos');
+        throw new Error(data.error || 'Error al analizar los correos');
       }
       
-      const data = await response.json();
       setEmailAnalysisResult(data.summary);
       setSuccessMessage('Análisis de correos completado');
     } catch (error) {
       console.error('Error al analizar correos:', error);
-      setMessage('Error al analizar los correos. Por favor, intente nuevamente.');
+      setMessage(error instanceof Error ? error.message : 'Error al analizar los correos. Por favor, intente nuevamente.');
     } finally {
       setIsAnalyzingEmails(false);
     }
