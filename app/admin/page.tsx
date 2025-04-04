@@ -497,35 +497,6 @@ export default function AdminPage() {
     }
   };
 
-  // Función para analizar correos
-  const handleAnalyzeEmails = async () => {
-    setIsAnalyzingEmails(true);
-    setEmailAnalysisResult(null);
-    
-    try {
-      const response = await fetch('/api/analyze-emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al analizar los correos');
-      }
-      
-      setEmailAnalysisResult(data.summary);
-      setSuccessMessage('Análisis de correos completado');
-    } catch (error) {
-      console.error('Error al analizar correos:', error);
-      setMessage(error instanceof Error ? error.message : 'Error al analizar los correos. Por favor, intente nuevamente.');
-    } finally {
-      setIsAnalyzingEmails(false);
-    }
-  };
-
   return (
     <ProtectedRoute>
       <div className="container mx-auto py-6">
@@ -613,13 +584,6 @@ export default function AdminPage() {
                 <h2 className="text-xl font-semibold">Notificación Importante</h2>
                 <div className="flex gap-2">
                   <button 
-                    onClick={handleAnalyzeEmails}
-                    disabled={isAnalyzingEmails}
-                    className="bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700 disabled:bg-green-300"
-                  >
-                    {isAnalyzingEmails ? 'Analizando...' : 'Analizar Correos del Día'}
-                  </button>
-                  <button 
                     onClick={handleDeleteAllNotifications}
                     className="bg-red-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-700"
                   >
@@ -627,13 +591,6 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
-              
-              {emailAnalysisResult && (
-                <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4">
-                  <h3 className="text-lg font-medium text-blue-800 mb-2">Resumen de Correos del Día</h3>
-                  <p className="text-gray-700 whitespace-pre-line">{emailAnalysisResult}</p>
-                </div>
-              )}
               
               {currentNotification ? (
                 <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4">
