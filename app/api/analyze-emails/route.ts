@@ -4,13 +4,13 @@ import { simpleParser } from 'mailparser';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 const imapConfig = {
-  user: process.env.ZIMBRA_EMAIL,
-  password: process.env.ZIMBRA_PASSWORD,
-  host: process.env.ZIMBRA_HOST,
+  user: process.env.ZIMBRA_EMAIL || '',
+  password: process.env.ZIMBRA_PASSWORD || '',
+  host: process.env.ZIMBRA_HOST || '',
   port: parseInt(process.env.ZIMBRA_PORT || '993'),
   tls: true,
   tlsOptions: { rejectUnauthorized: false }
@@ -18,6 +18,21 @@ const imapConfig = {
 
 export async function POST(): Promise<Response> {
   try {
+    // Verificar que las configuraciones necesarias existan
+    if (!process.env.ZIMBRA_EMAIL || !process.env.ZIMBRA_PASSWORD || !process.env.ZIMBRA_HOST) {
+      return NextResponse.json(
+        { error: 'Faltan variables de entorno para la configuración de IMAP' },
+        { status: 500 }
+      );
+    }
+    
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { error: 'Falta la clave API de OpenAI' },
+        { status: 500 }
+      );
+    }
+    
     const imap = new Imap(imapConfig);
     
     return new Promise<Response>((resolve, reject) => {
