@@ -50,10 +50,9 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Descripción</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Comentario</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">Descripción</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Comentario</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Estado</th>
               {(onEdit || onDelete) && (
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               )}
@@ -62,20 +61,19 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
           <tbody className="bg-white divide-y divide-gray-200">
             {currentTasks.length === 0 && !isLoading ? (
               <tr>
-                <td colSpan={onEdit || onDelete ? 5 : 4} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={onEdit || onDelete ? 4 : 3} className="px-6 py-4 text-center text-sm text-gray-500">
                   No hay tareas para mostrar.
                 </td>
               </tr>
             ) : isLoading ? (
               <tr>
-                <td colSpan={onEdit || onDelete ? 5 : 4} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={onEdit || onDelete ? 4 : 3} className="px-6 py-4 text-center text-sm text-gray-500">
                   Cargando...
                 </td>
               </tr>
             ) : (
               currentTasks.map((task) => (
                 <tr key={String(task.id)}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{String(task.id)}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="break-words flex items-center">
                       {task.highlighted && (
@@ -86,8 +84,10 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {task.comment ? (
-                      <div className="max-w-xs text-justify whitespace-normal break-words">
-                        {task.comment}
+                      <div className="text-justify whitespace-normal break-words">
+                        {task.comment.length > 50 
+                          ? `${task.comment.substring(0, 50)}...` 
+                          : task.comment}
                       </div>
                     ) : (
                       <span className="text-gray-400">-</span>
