@@ -1,0 +1,50 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# API Endpoints - Tablero DGT
+
+Documentación de los principales endpoints de la API.
+
+## Autenticación
+- [POST /api/auth/login](mdc:app/api/auth/login/route.ts) - Inicio de sesión
+- [POST /api/auth/logout](mdc:app/api/auth/logout/route.ts) - Cerrar sesión
+- [POST /api/auth/validate-session](mdc:app/api/auth/validate-session/route.ts) - Validar sesión
+
+## Gestión de Tareas
+- [GET /api/tasks](mdc:app/api/tasks/route.ts) - Obtener todas las tareas
+- [POST /api/tasks](mdc:app/api/tasks/route.ts) - Crear nueva tarea
+- [GET /api/tasks/[id]](mdc:app/api/tasks/[id]/route.ts) - Obtener tarea específica
+- [PUT /api/tasks/[id]](mdc:app/api/tasks/[id]/route.ts) - Actualizar tarea
+- [DELETE /api/tasks/[id]](mdc:app/api/tasks/[id]/route.ts) - Eliminar tarea
+
+### Endpoints Especiales de Tareas
+- [GET /api/tasks/active](mdc:app/api/tasks/active/route.ts) - Tareas activas
+- [GET /api/tasks/highlighted](mdc:app/api/tasks/highlighted/route.ts) - Tareas destacadas
+- [GET /api/tasks/counts](mdc:app/api/tasks/counts/route.ts) - Contadores por estado
+- [GET /api/tasks/last-update](mdc:app/api/tasks/last-update/route.ts) - Última actualización
+
+### Comentarios de Seguimiento
+- [GET /api/tasks/[id]/comments](mdc:app/api/tasks/[id]/comments/route.ts) - Obtener comentarios de una tarea
+- [POST /api/tasks/[id]/comments](mdc:app/api/tasks/[id]/comments/route.ts) - Agregar comentario a una tarea
+- [DELETE /api/tasks/[id]/comments?commentId=X](mdc:app/api/tasks/[id]/comments/route.ts) - Eliminar comentario
+
+## Notificaciones
+- [GET /api/notifications](mdc:app/api/notifications/route.ts) - Obtener notificaciones
+- [GET /api/notifications/current](mdc:app/api/notifications/current/route.ts) - Notificaciones actuales
+- [POST /api/notifications/viewed](mdc:app/api/notifications/viewed/route.ts) - Marcar como vista
+
+## Administración
+- [GET /api/admin/fix-user](mdc:app/api/admin/fix-user/route.ts) - Reparar usuario admin
+- [POST /api/upload](mdc:app/api/upload/route.ts) - Subir archivos
+
+## Formato de Respuesta
+Todos los endpoints siguen el patrón:
+```json
+{
+  "success": boolean,
+  "data": any,
+  "error": string | null
+}
+```

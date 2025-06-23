@@ -26,6 +26,15 @@ export const tasks = pgTable('tasks', {
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
+// Tabla de comentarios históricos de tareas
+export const taskComments = pgTable('task_comments', {
+  id: serial('id').primaryKey(),
+  taskId: integer('task_id').notNull(),
+  comment: text('comment').notNull(),
+  createdBy: varchar('created_by', { length: 100 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
 // Tabla de visitas
 export const visits = pgTable('visits', {
   id: serial('id').primaryKey(),

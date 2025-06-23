@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Task } from '@/app/lib/types';
+import TaskCommentsModal from './TaskCommentsModal';
 
 interface TasksTableProps {
   tasks: Task[];
@@ -13,6 +14,8 @@ interface TasksTableProps {
 export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: TasksTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const tasksPerPage = 10;
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
 
   // Ordenar tareas por ID (de mayor a menor)
   const sortedTasks = [...tasks].sort((a, b) => {
@@ -42,6 +45,17 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
   // Función para cambiar de página
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+  // Función para abrir modal de comentarios
+  const handleOpenComments = (task: Task) => {
+    setSelectedTask(task);
+    setIsCommentsModalOpen(true);
+  };
+
+  const handleCloseComments = () => {
+    setSelectedTask(null);
+    setIsCommentsModalOpen(false);
+  };
+
   // Funciones removidas para simplificar la tabla
 
   return (
@@ -53,21 +67,19 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">Descripción</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Comentario</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Estado</th>
-              {(onEdit || onDelete) && (
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-              )}
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {currentTasks.length === 0 && !isLoading ? (
               <tr>
-                <td colSpan={onEdit || onDelete ? 4 : 3} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
                   No hay tareas para mostrar.
                 </td>
               </tr>
             ) : isLoading ? (
               <tr>
-                <td colSpan={onEdit || onDelete ? 4 : 3} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
                   Cargando...
                 </td>
               </tr>
@@ -102,28 +114,33 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
                       {task.status}
                     </span>
                   </td>
-                  {(onEdit || onDelete) && (
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {onEdit && (
-                        <button
-                          onClick={() => onEdit(task)}
-                          disabled={isLoading}
-                          className="text-indigo-600 hover:text-indigo-900 mr-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Editar
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button
-                          onClick={() => onDelete(task.id)}
-                          disabled={isLoading}
-                          className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Eliminar
-                        </button>
-                      )}
-                    </td>
-                  )}
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => handleOpenComments(task)}
+                      disabled={isLoading}
+                      className="text-green-600 hover:text-green-900 mr-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Seguimiento
+                    </button>
+                    {onEdit && (
+                      <button
+                        onClick={() => onEdit(task)}
+                        disabled={isLoading}
+                        className="text-indigo-600 hover:text-indigo-900 mr-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Editar
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        onClick={() => onDelete(task.id)}
+                        disabled={isLoading}
+                        className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))
             )}
@@ -186,6 +203,16 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
             </button>
           </div>
         </div>
+      )}
+
+      {/* Modal de comentarios */}
+      {selectedTask && (
+        <TaskCommentsModal
+          taskId={Number(selectedTask.id)}
+          taskDescription={selectedTask.description}
+          isOpen={isCommentsModalOpen}
+          onClose={handleCloseComments}
+        />
       )}
     </div>
   );

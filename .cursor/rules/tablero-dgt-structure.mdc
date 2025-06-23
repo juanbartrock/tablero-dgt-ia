@@ -1,0 +1,36 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Tablero DGT - Estructura del Proyecto
+
+Este es un proyecto Next.js para gestión de tareas del área de Inteligencia Artificial de la DGT.
+
+## Estructura Principal
+
+- **App Router**: Utiliza el app router de Next.js 13+
+- **Componentes**: [app/components/](mdc:app/components) - Componentes reutilizables
+- **API Routes**: [app/api/](mdc:app/api) - Endpoints de la API
+- **Base de datos**: PostgreSQL con esquemas en [app/lib/db/](mdc:app/lib/db)
+
+## Componentes Clave
+
+### Gestión de Tareas
+- [TasksTable.tsx](mdc:app/components/tasks/TasksTable.tsx) - Tabla principal de tareas
+- [TaskForm.tsx](mdc:app/components/tasks/TaskForm.tsx) - Formulario de creación/edición
+- [TaskManager.tsx](mdc:app/components/tasks/TaskManager.tsx) - Gestión completa de tareas
+
+### Dashboard
+- [DirectKPI.tsx](mdc:app/components/dashboard/DirectKPI.tsx) - KPIs principales
+- [StatusChart.tsx](mdc:app/components/dashboard/StatusChart.tsx) - Gráfico de estados
+- [UpcomingTasksList.tsx](mdc:app/components/dashboard/UpcomingTasksList.tsx) - Próximas tareas
+
+## Base de Datos
+- [schema.ts](mdc:app/lib/db/schema.ts) - Definición de esquemas
+- [tasks.ts](mdc:app/lib/db/tasks.ts) - Operaciones de tareas
+- [notifications.ts](mdc:app/lib/db/notifications.ts) - Sistema de notificaciones
+
+## Tipos
+- [types.ts](mdc:app/lib/types.ts) - Definiciones TypeScript principales
+
