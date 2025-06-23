@@ -42,40 +42,7 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
   // Función para cambiar de página
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  // Función para presentar responsables, posiblemente separados por comas
-  const formatResponsibles = (responsibles: string) => {
-    if (!responsibles) return '-';
-    
-    // Si los responsables están separados por comas, los presentamos como una lista
-    if (responsibles.includes(',')) {
-      const respList = responsibles.split(',').map(r => r.trim()).filter(r => r);
-      return (
-        <ul className="list-disc list-inside text-xs">
-          {respList.map((resp, idx) => (
-            <li key={idx}>{resp}</li>
-          ))}
-        </ul>
-      );
-    }
-    
-    // Si es un solo responsable, lo presentamos directamente
-    return responsibles;
-  };
-
-  // Función para presentar áreas vinculadas como una lista formateada
-  const formatLinkedAreas = (areas: string[]) => {
-    if (!areas || areas.length === 0) return '-';
-    
-    if (areas.length === 1) return areas[0];
-    
-    return (
-      <ul className="list-disc list-inside text-xs">
-        {areas.map((area, idx) => (
-          <li key={idx}>{area}</li>
-        ))}
-      </ul>
-    );
-  };
+  // Funciones removidas para simplificar la tabla
 
   return (
     <div className={`mt-6 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -84,15 +51,9 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Descripción</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Descripción</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Comentario</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridad</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Importante</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Áreas Vinculadas</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Responsable(s)</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Destacada</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Archivo Adjunto</th>
               {(onEdit || onDelete) && (
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               )}
@@ -101,13 +62,13 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
           <tbody className="bg-white divide-y divide-gray-200">
             {currentTasks.length === 0 && !isLoading ? (
               <tr>
-                <td colSpan={onEdit || onDelete ? 11 : 10} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={onEdit || onDelete ? 5 : 4} className="px-6 py-4 text-center text-sm text-gray-500">
                   No hay tareas para mostrar.
                 </td>
               </tr>
             ) : isLoading ? (
               <tr>
-                <td colSpan={onEdit || onDelete ? 11 : 10} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={onEdit || onDelete ? 5 : 4} className="px-6 py-4 text-center text-sm text-gray-500">
                   Cargando...
                 </td>
               </tr>
@@ -116,7 +77,12 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
                 <tr key={String(task.id)}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{String(task.id)}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    <div className="break-words">{task.description || '-'}</div>
+                    <div className="break-words flex items-center">
+                      {task.highlighted && (
+                        <span className="text-yellow-500 text-lg mr-2">★</span>
+                      )}
+                      {task.description || '-'}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {task.comment ? (
@@ -135,43 +101,6 @@ export default function TasksTable({ tasks, onEdit, onDelete, isLoading }: Tasks
                         'bg-green-100 text-green-800'}`}>
                       {task.status}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                      ${task.priority === 'Alta' ? 'bg-red-100 text-red-800' : 
-                        task.priority === 'Media' ? 'bg-yellow-100 text-yellow-800' : 
-                        'bg-green-100 text-green-800'}`}>
-                      {task.priority}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {task.importantDate || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatLinkedAreas(task.linkedAreas)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                    {formatResponsibles(task.responsible)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                    {task.highlighted ? (
-                      <span className="text-yellow-500 text-lg">★</span>
-                    ) : (
-                      <span className="text-gray-300 text-lg">☆</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                    {task.fileUrl && (
-                      <button
-                        onClick={() => window.open(task.fileUrl, '_blank')}
-                        className="text-gray-500 hover:text-blue-500 transition-colors"
-                        title="Descargar archivo adjunto"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    )}
                   </td>
                   {(onEdit || onDelete) && (
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
