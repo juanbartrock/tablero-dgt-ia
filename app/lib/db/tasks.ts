@@ -1,7 +1,11 @@
-import { db } from '.';
-import { tasks, taskComments } from './schema';
+import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from '@vercel/postgres';
 import { eq, ne, desc } from 'drizzle-orm';
+import { tasks, taskComments } from './schema';
+import * as schema from './schema';
+
+// Crear cliente Drizzle usando la conexión de Vercel
+const db = drizzle(sql, { schema });
 
 // Tipos
 export type Task = {
@@ -170,14 +174,25 @@ export async function deleteTask(id: number): Promise<void> {
   }
 }
 
-// Funciones para comentarios históricos
+// Funciones para comentarios históricos usando SQL directo
 
 // Obtener comentarios de una tarea
 export async function getTaskComments(taskId: number): Promise<TaskComment[]> {
   try {
-    return await db.select().from(taskComments)
-      .where(eq(taskComments.taskId, taskId))
-      .orderBy(desc(taskComments.createdAt));
+    const result = await sql`
+      SELECT id, task_id as "taskId", comment, created_by as "createdBy", created_at as "createdAt"
+      FROM task_comments 
+      WHERE task_id = ${taskId} 
+      ORDER BY created_at DESC
+    `;
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      taskId: row.taskId,
+      comment: row.comment,
+      createdBy: row.createdBy,
+      createdAt: new Date(row.createdAt)
+    }));
   } catch (error) {
     console.error(`Error al obtener comentarios de la tarea ${taskId}:`, error);
     return [];
@@ -187,13 +202,20 @@ export async function getTaskComments(taskId: number): Promise<TaskComment[]> {
 // Agregar comentario a una tarea
 export async function addTaskComment(taskId: number, comment: string, createdBy: string): Promise<TaskComment> {
   try {
-    const result = await db.insert(taskComments).values({
-      taskId,
-      comment,
-      createdBy
-    }).returning();
+    const result = await sql`
+      INSERT INTO task_comments (task_id, comment, created_by)
+      VALUES (${taskId}, ${comment}, ${createdBy})
+      RETURNING id, task_id as "taskId", comment, created_by as "createdBy", created_at as "createdAt"
+    `;
     
-    return result[0];
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      taskId: row.taskId,
+      comment: row.comment,
+      createdBy: row.createdBy,
+      createdAt: new Date(row.createdAt)
+    };
   } catch (error) {
     console.error(`Error al agregar comentario a la tarea ${taskId}:`, error);
     throw new Error('No se pudo agregar el comentario');
@@ -203,7 +225,10 @@ export async function addTaskComment(taskId: number, comment: string, createdBy:
 // Eliminar comentario
 export async function deleteTaskComment(commentId: number): Promise<void> {
   try {
-    await db.delete(taskComments).where(eq(taskComments.id, commentId));
+    await sql`
+      DELETE FROM task_comments 
+      WHERE id = ${commentId}
+    `;
   } catch (error) {
     console.error(`Error al eliminar comentario ${commentId}:`, error);
     throw new Error('No se pudo eliminar el comentario');
